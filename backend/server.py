@@ -675,10 +675,8 @@ async def execute_trades_for_alert(alert: dict):
                 logger.info(f"Products containing {clean_symbol}: {available[:10]}")
                 continue
             
-            # Calculate quantity
+            # Calculate quantity - use full contract quantity (exit_half_position is for profit booking, not entry)
             quantity = settings.get("contract_quantity", 1)
-            if settings.get("exit_half_position", False):
-                quantity = max(1, int(quantity / 2 + 0.5))
             
             # Place order
             side = "buy" if action == "BUY" else "sell"
