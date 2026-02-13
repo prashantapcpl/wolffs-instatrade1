@@ -397,28 +397,40 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
         
         # Get balance - this is the main check
         balance_result = await delta_client.get_wallet_balance()
+        logger.info(f"Wallet balance response: {balance_result}")
         
         total_balance = "0"
-        balance_currency = "USDT"
+        balance_currency = "USD"
+        
         if balance_result.get("result"):
-            # Try to find any non-zero balance
-            for bal in balance_result["result"]:
+            balances = balance_result["result"]
+            # Calculate total balance across all assets
+            total_usd = 0
+            for bal in balances:
                 available = float(bal.get("available_balance", 0) or 0)
+                symbol = bal.get("asset_symbol", "")
+                # Log each balance for debugging
                 if available > 0:
-                    total_balance = str(available)
-                    balance_currency = bal.get("asset_symbol", "USDT")
-                    break
-            # If no non-zero balance found, show USDT or first available
-            if total_balance == "0" and balance_result["result"]:
-                for bal in balance_result["result"]:
-                    if bal.get("asset_symbol") == "USDT":
-                        total_balance = bal.get("available_balance", "0") or "0"
+                    logger.info(f"Balance found: {symbol} = {available}")
+                # Sum up USD-equivalent balances
+                if symbol in ["USD", "USDT", "USDC"]:
+                    total_usd += available
+                elif symbol == "BTC" and available > 0:
+                    # Approximate BTC to USD (you may want to fetch actual rate)
+                    total_usd += available * 95000  # Rough estimate
+                elif symbol == "ETH" and available > 0:
+                    total_usd += available * 3000  # Rough estimate
+            
+            if total_usd > 0:
+                total_balance = str(round(total_usd, 2))
+            else:
+                # If no USD balance found, show first non-zero balance
+                for bal in balances:
+                    available = float(bal.get("available_balance", 0) or 0)
+                    if available > 0:
+                        total_balance = str(available)
+                        balance_currency = bal.get("asset_symbol", "USD")
                         break
-                # If still 0, take first balance
-                if total_balance == "0":
-                    first_bal = balance_result["result"][0]
-                    total_balance = first_bal.get("available_balance", "0") or "0"
-                    balance_currency = first_bal.get("asset_symbol", "USD")
         
         # Try to get positions, but don't fail if it errors
         positions_count = 0
