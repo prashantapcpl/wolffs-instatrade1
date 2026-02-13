@@ -1,32 +1,106 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { 
     ArrowLeft, Zap, Bell, TrendingUp, TrendingDown,
-    RefreshCw, Filter
+    RefreshCw, Filter, Wifi, WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+const WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
 export default function AlertsPage() {
     const navigate = useNavigate();
     const [alerts, setAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [filter, setFilter] = useState('all'); // all, buy, sell
+    const [filter, setFilter] = useState('all');
+    const [wsConnected, setWsConnected] = useState(false);
+    const wsRef = useRef(null);
+    const reconnectTimeoutRef = useRef(null);
+
+    // WebSocket connection for real-time alerts
+    const connectWebSocket = useCallback(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+        const ws = new WebSocket(`${WS_URL}/ws/alerts`);
+        
+        ws.onopen = () => {
+            setWsConnected(true);
+            const heartbeat = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send('ping');
+                }
+            }, 30000);
+            ws.heartbeatInterval = heartbeat;
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'new_alert') {
+                    setAlerts(prev => [data.alert, ...prev]);
+                    
+                    const alert = data.alert;
+                    toast(
+                        <div className="flex items-center gap-3">
+                            {alert.action === 'BUY' ? (
+                                <TrendingUp className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <TrendingDown className="w-5 h-5 text-red-500" />
+                            )}
+                            <div>
+                                <p className="font-bold">{alert.symbol} {alert.action}</p>
+                                {alert.price && <p className="text-sm text-gray-400">${parseFloat(alert.price).toLocaleString()}</p>}
+                            </div>
+                        </div>,
+                        {
+                            duration: 5000,
+                            style: {
+                                background: alert.action === 'BUY' ? 'rgba(0, 255, 148, 0.1)' : 'rgba(255, 59, 48, 0.1)',
+                                border: `1px solid ${alert.action === 'BUY' ? 'rgba(0, 255, 148, 0.3)' : 'rgba(255, 59, 48, 0.3)'}`,
+                            }
+                        }
+                    );
+                }
+            } catch (e) {
+                console.error('WebSocket message error:', e);
+            }
+        };
+
+        ws.onclose = () => {
+            setWsConnected(false);
+            clearInterval(ws.heartbeatInterval);
+            reconnectTimeoutRef.current = setTimeout(() => {
+                connectWebSocket();
+            }, 2000);
+        };
+
+        ws.onerror = () => {
+            setWsConnected(false);
+        };
+
+        wsRef.current = ws;
+    }, []);
 
     useEffect(() => {
         fetchAlerts();
+        connectWebSocket();
         
-        // Auto-refresh every 15 seconds
-        const interval = setInterval(fetchAlerts, 15000);
-        return () => clearInterval(interval);
-    }, []);
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+            }
+        };
+    }, [connectWebSocket]);
 
     const fetchAlerts = async () => {
         try {
@@ -113,6 +187,11 @@ export default function AlertsPage() {
                             <h1 className="logo-text text-xl text-white uppercase">
                                 Trading Alerts
                             </h1>
+                            {/* Live indicator */}
+                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${wsConnected ? 'bg-neon-green-dim text-neon-green' : 'bg-neon-red-dim text-neon-red'}`}>
+                                {wsConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                                <span className="font-mono">{wsConnected ? 'LIVE' : 'OFFLINE'}</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -185,7 +264,7 @@ export default function AlertsPage() {
                                 <p className="text-gray-600 text-sm mt-2">
                                     {filter !== 'all' 
                                         ? `No ${filter.toUpperCase()} alerts yet` 
-                                        : 'Alerts from TradingView will appear here'}
+                                        : 'Alerts from TradingView will appear here instantly'}
                                 </p>
                             </div>
                         ) : (
