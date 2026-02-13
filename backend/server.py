@@ -67,7 +67,9 @@ class ConnectionManager:
         if not self.active_connections:
             return
         
-        message = json.dumps({"type": "new_alert", "alert": alert})
+        # Create a JSON-safe copy of the alert (remove MongoDB _id if present)
+        safe_alert = {k: v for k, v in alert.items() if k != '_id'}
+        message = json.dumps({"type": "new_alert", "alert": safe_alert})
         disconnected = set()
         
         for connection in self.active_connections:
