@@ -47,6 +47,42 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ======================= WEBSOCKET CONNECTION MANAGER =======================
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Set[WebSocket] = set()
+    
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.add(websocket)
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+    
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.discard(websocket)
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+    
+    async def broadcast_alert(self, alert: dict):
+        """Broadcast new alert to all connected clients instantly"""
+        if not self.active_connections:
+            return
+        
+        message = json.dumps({"type": "new_alert", "alert": alert})
+        disconnected = set()
+        
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception as e:
+                logger.error(f"Failed to send to websocket: {e}")
+                disconnected.add(connection)
+        
+        # Clean up disconnected clients
+        for conn in disconnected:
+            self.active_connections.discard(conn)
+
+ws_manager = ConnectionManager()
+
 # ======================= MODELS =======================
 
 class UserCreate(BaseModel):
