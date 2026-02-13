@@ -635,13 +635,16 @@ async def execute_trades_for_alert(alert: dict):
             
             for p in products.get("result", []):
                 p_symbol = p.get("symbol", "").upper()
-                p_type = p.get("product_type", "")
+                p_type = str(p.get("product_type", "")).lower()
                 
-                # Match BTC or ETH in product symbol for perpetual futures
-                if clean_symbol in p_symbol and p_type == "perpetual_futures":
+                # Match BTC or ETH perpetual/futures - check symbol directly for BTCUSD, ETHUSD
+                # Also handle cases where product_type might be None
+                is_perpetual = 'perpetual' in p_type or 'futures' in p_type or p_symbol in ['BTCUSD', 'ETHUSD']
+                
+                if clean_symbol in p_symbol and (is_perpetual or p_symbol in ['BTCUSD', 'ETHUSD']):
                     product_id = p["id"]
                     product_symbol = p["symbol"]
-                    logger.info(f"Found matching product: {product_symbol} (ID: {product_id})")
+                    logger.info(f"Found matching product: {product_symbol} (ID: {product_id}, type: {p_type})")
                     break
             
             if not product_id:
