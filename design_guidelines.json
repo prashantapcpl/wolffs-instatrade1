@@ -1,0 +1,189 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Wolffs Insta AutoTrade",
+      "archetype": "The Performance Pro",
+      "tone": "Professional, High-Frequency, Tactical, Precision",
+      "theme_mode": "dark"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Barlow Condensed, sans-serif",
+        "body": "Manrope, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "google_fonts_url": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap",
+      "usage": {
+        "h1": "font-headings font-bold text-4xl md:text-5xl tracking-tight uppercase",
+        "h2": "font-headings font-semibold text-3xl tracking-tight uppercase",
+        "h3": "font-headings font-medium text-2xl tracking-normal",
+        "body": "font-body text-base text-gray-300 leading-relaxed",
+        "label": "font-mono text-xs text-gray-500 uppercase tracking-wider",
+        "data": "font-mono text-sm font-medium text-white"
+      }
+    },
+    "colors": {
+      "palette": {
+        "background": "#050505",
+        "surface": "#0F0F10",
+        "surface_highlight": "#18181B",
+        "border": "rgba(255, 255, 255, 0.1)",
+        "primary": "#00FF94",
+        "primary_dim": "rgba(0, 255, 148, 0.1)",
+        "secondary": "#FF3B30",
+        "secondary_dim": "rgba(255, 59, 48, 0.1)",
+        "accent": "#3B82F6",
+        "text_primary": "#FFFFFF",
+        "text_secondary": "#A1A1AA",
+        "text_muted": "#52525B"
+      },
+      "semantic": {
+        "buy": "text-[#00FF94]",
+        "sell": "text-[#FF3B30]",
+        "profit": "text-[#00FF94]",
+        "loss": "text-[#FF3B30]",
+        "active_status": "bg-[#00FF94] shadow-[0_0_10px_rgba(0,255,148,0.5)]",
+        "inactive_status": "bg-gray-600"
+      }
+    },
+    "layout": {
+      "container": "max-w-[1600px] mx-auto p-4 md:p-6",
+      "grid_system": "grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6",
+      "spacing": {
+        "section_gap": "py-12 md:py-20",
+        "component_gap": "gap-6",
+        "internal_padding": "p-6"
+      },
+      "border_radius": {
+        "card": "rounded-sm",
+        "button": "rounded-md",
+        "input": "rounded-md"
+      }
+    },
+    "components": {
+      "card": {
+        "base": "bg-[#0F0F10] border border-white/10 rounded-sm shadow-none",
+        "hover": "hover:border-white/20 transition-colors duration-200"
+      },
+      "button": {
+        "primary": "bg-[#00FF94] text-black font-bold hover:bg-[#00CC76] rounded-md px-6 py-2 uppercase tracking-wide transition-all shadow-[0_0_15px_rgba(0,255,148,0.2)] hover:shadow-[0_0_25px_rgba(0,255,148,0.4)]",
+        "secondary": "bg-transparent border border-white/20 text-white hover:bg-white/5 rounded-md px-6 py-2 uppercase tracking-wide transition-all",
+        "destructive": "bg-[#FF3B30] text-white font-bold hover:bg-[#CC2F26] rounded-md px-6 py-2 uppercase tracking-wide shadow-[0_0_15px_rgba(255,59,48,0.2)]"
+      },
+      "input": {
+        "base": "bg-[#050505] border border-white/10 text-white placeholder:text-gray-600 focus:border-[#00FF94] focus:ring-1 focus:ring-[#00FF94] rounded-md h-10 px-3 font-mono text-sm"
+      },
+      "badge": {
+        "base": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-mono uppercase tracking-wider",
+        "success": "bg-[#00FF94]/10 text-[#00FF94] border border-[#00FF94]/20",
+        "error": "bg-[#FF3B30]/10 text-[#FF3B30] border border-[#FF3B30]/20",
+        "neutral": "bg-white/5 text-gray-400 border border-white/10"
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": "backdrop-blur-xl bg-[#0F0F10]/80 border border-white/10",
+      "gradients": {
+        "hero_glow": "bg-gradient-to-b from-[#00FF94]/5 to-transparent",
+        "card_hover": "bg-gradient-to-br from-white/5 to-transparent"
+      },
+      "shadows": {
+        "neon_green": "0 0 20px rgba(0, 255, 148, 0.15)",
+        "neon_red": "0 0 20px rgba(255, 59, 48, 0.15)"
+      }
+    }
+  },
+  "assets": {
+    "images": {
+      "login_background": "https://images.unsplash.com/photo-1737505599162-d9932323a889?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjBkaWdpdGFsJTIwdGVjaG5vbG9neSUyMG5ldHdvcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDk4MjA1N3ww&ixlib=rb-4.1.0&q=85",
+      "logo_placeholder": "https://placehold.co/400x100/050505/00FF94?text=WOLFFS+AUTO"
+    },
+    "icons": {
+      "library": "lucide-react",
+      "preferred_icons": [
+        "Activity",
+        "TrendingUp",
+        "TrendingDown",
+        "Wallet",
+        "Settings",
+        "Bell",
+        "Zap",
+        "Lock",
+        "LogOut",
+        "User"
+      ]
+    }
+  },
+  "pages": {
+    "login": {
+      "layout": "Split screen: Left side branding/art, Right side form",
+      "elements": [
+        "Logo",
+        "Email Input",
+        "Password Input",
+        "Sign In Button",
+        "Register Link"
+      ]
+    },
+    "dashboard": {
+      "layout": "Bento Grid Mode B (High Density)",
+      "sections": [
+        {
+          "name": "Broker Status",
+          "type": "Card",
+          "grid_span": "col-span-12 md:col-span-4",
+          "content": "Connection status, Balance, Active PnL"
+        },
+        {
+          "name": "Alerts Window",
+          "type": "Scrollable List",
+          "grid_span": "col-span-12 md:col-span-8 row-span-2",
+          "content": "Real-time buy/sell signals from TradingView"
+        },
+        {
+          "name": "Active Positions",
+          "type": "Table",
+          "grid_span": "col-span-12 md:col-span-4",
+          "content": "Current open trades"
+        }
+      ]
+    },
+    "settings": {
+      "layout": "Single Column with Sections",
+      "sections": [
+        "API Keys (Delta Exchange)",
+        "Trading Parameters (Qty, Leverage)",
+        "Risk Management (Stop Loss, Take Profit)"
+      ]
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. INSTALL FONTS: Add the Google Fonts link to the <head> of index.html immediately.",
+    "2. CONFIGURE TAILWIND: Update tailwind.config.js to include the custom colors (obsidian, neon-green, etc.) and font families.",
+    "3. GLOBAL CSS: In index.css, set the body background to #050505 and text to #FFFFFF. Remove any default light mode styles.",
+    "4. COMPONENT OVERRIDES: When using Shadcn components, ALWAYS override the default rounded-xl with rounded-sm or rounded-md to match the 'Tactical' aesthetic.",
+    "5. DATA-TESTID: Ensure every interactive element (buttons, inputs) has a data-testid attribute.",
+    "6. NO GRADIENTS: Do not use large sweeping gradients. Use solid dark colors with subtle borders.",
+    "7. USE LUCIDE ICONS: Use lucide-react for all icons.",
+    "8. MOBILE FIRST: Ensure the grid collapses to 1 column on mobile."
+  ],
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use sonner for toasts"
+  ]
+}
