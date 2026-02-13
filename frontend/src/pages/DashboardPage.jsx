@@ -175,26 +175,41 @@ export default function DashboardPage() {
     const formatTime = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
-        return date.toLocaleTimeString('en-US', { 
+        // Convert to IST (Indian Standard Time - UTC+5:30)
+        return date.toLocaleTimeString('en-IN', { 
             hour: '2-digit', 
             minute: '2-digit',
-            hour12: true 
+            hour12: true,
+            timeZone: 'Asia/Kolkata'
         });
     };
 
     const formatDate = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
+        const now = new Date();
         
-        if (date.toDateString() === today.toDateString()) {
+        // Convert both to IST for comparison
+        const istOptions = { timeZone: 'Asia/Kolkata' };
+        const dateIST = new Date(date.toLocaleString('en-US', istOptions));
+        const todayIST = new Date(now.toLocaleString('en-US', istOptions));
+        const yesterdayIST = new Date(todayIST);
+        yesterdayIST.setDate(yesterdayIST.getDate() - 1);
+        
+        const dateStr = date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        const todayStr = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        const yesterdayStr = yesterdayIST.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        
+        if (dateStr === todayStr) {
             return 'Today';
-        } else if (date.toDateString() === yesterday.toDateString()) {
+        } else if (dateStr === yesterdayStr) {
             return 'Yesterday';
         }
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return date.toLocaleDateString('en-IN', { 
+            month: 'short', 
+            day: 'numeric',
+            timeZone: 'Asia/Kolkata'
+        });
     };
 
     return (
