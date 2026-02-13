@@ -429,23 +429,48 @@ async def update_settings(settings: TradingSettings, current_user: dict = Depend
 async def tradingview_webhook(request: Request, background_tasks: BackgroundTasks):
     """Receive TradingView alerts and execute trades"""
     try:
-        body = await request.json()
-    except:
-        body = {}
+        content_type = request.headers.get("content-type", "")
         raw_body = await request.body()
-        if raw_body:
+        body_text = raw_body.decode() if raw_body else ""
+        
+        logger.info(f"Received TradingView webhook - Content-Type: {content_type}, Body: {body_text}")
+        
+        # Try to parse as JSON first
+        body = {}
+        if body_text:
             try:
-                body = json.loads(raw_body.decode())
-            except:
-                body = {"message": raw_body.decode()}
+                body = json.loads(body_text)
+                if not isinstance(body, dict):
+                    # If it's not a dict (e.g., just a number or string), wrap it
+                    body = {"message": str(body)}
+            except json.JSONDecodeError:
+                # Not JSON, treat as plain text message
+                # Try to parse common formats like "BUY BTCUSD" or "BTCUSD BUY"
+                parts = body_text.strip().upper().split()
+                if len(parts) >= 2:
+                    if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
+                        body = {"action": parts[0], "symbol": parts[1]}
+                    elif parts[1] in ["BUY", "SELL", "LONG", "SHORT"]:
+                        body = {"symbol": parts[0], "action": parts[1]}
+                    else:
+                        body = {"message": body_text}
+                else:
+                    body = {"message": body_text}
+    except Exception as e:
+        logger.error(f"Error parsing webhook body: {e}")
+        body = {}
     
-    logger.info(f"Received TradingView webhook: {body}")
+    # Parse alert data with safe defaults
+    symbol = "UNKNOWN"
+    action = "UNKNOWN"
+    price = None
+    message = ""
     
-    # Parse alert data
-    symbol = body.get("symbol", body.get("ticker", "UNKNOWN")).upper()
-    action = body.get("action", body.get("strategy.order.action", "")).upper()
-    price = body.get("price", body.get("close"))
-    message = body.get("message", body.get("comment", ""))
+    if isinstance(body, dict):
+        symbol = str(body.get("symbol", body.get("ticker", "UNKNOWN"))).upper()
+        action = str(body.get("action", body.get("strategy.order.action", ""))).upper()
+        price = body.get("price", body.get("close"))
+        message = str(body.get("message", body.get("comment", "")))
     
     # Normalize action
     if action in ["BUY", "LONG", "ENTRY_LONG"]:
@@ -459,18 +484,20 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
         "id": alert_id,
         "symbol": symbol,
         "action": action,
-        "price": float(price) if price else None,
+        "price": float(price) if price and str(price).replace('.', '').isdigit() else None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "message": message,
         "executed": False,
         "execution_result": None,
-        "raw_data": body
+        "raw_data": body_text
     }
     
     await db.alerts.insert_one(alert_record)
+    logger.info(f"Alert saved: {alert_id} - {symbol} {action}")
     
     # Execute trades for all users with matching instruments
-    background_tasks.add_task(execute_trades_for_alert, alert_record)
+    if action in ["BUY", "SELL"]:
+        background_tasks.add_task(execute_trades_for_alert, alert_record)
     
     return {"status": "received", "alert_id": alert_id, "symbol": symbol, "action": action}
 
