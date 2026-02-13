@@ -194,7 +194,10 @@ export default function SettingsPage() {
                                         <div>
                                             <p className="text-neon-green font-medium">Account Connected</p>
                                             <p className="text-gray-400 text-sm mt-1">
-                                                Balance: ${parseFloat(deltaStatus.balance || 0).toFixed(2)} USDT
+                                                Balance: ${parseFloat(deltaStatus.balance || 0).toFixed(2)}
+                                            </p>
+                                            <p className="text-gray-500 text-xs mt-2">
+                                                Region: {deltaStatus?.region || 'India'} | Mode: {deltaStatus?.is_testnet ? 'Testnet' : 'Production'}
                                             </p>
                                         </div>
                                         <Button
@@ -207,6 +210,19 @@ export default function SettingsPage() {
                                             Disconnect
                                         </Button>
                                     </div>
+                                </div>
+                                
+                                {/* Connection Info */}
+                                <div className="p-3 bg-surface-highlight rounded-sm border border-white/10">
+                                    <p className="text-gray-400 text-sm">
+                                        <strong className="text-white">Connection Status:</strong> Your API keys are securely saved. 
+                                        The connection stays active permanently until you disconnect or revoke keys from Delta Exchange.
+                                    </p>
+                                    <p className="text-gray-500 text-xs mt-2">
+                                        • No need to reconnect daily<br/>
+                                        • Keys are encrypted and stored securely<br/>
+                                        • Disconnect removes keys from our system
+                                    </p>
                                 </div>
                             </div>
                         ) : (
