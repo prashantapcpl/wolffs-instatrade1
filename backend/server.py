@@ -26,7 +26,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Settings
-JWT_SECRET = os.environ.get('JWT_SECRET', 'wolffs-insta-autotrade-secret-key-2024')
+JWT_SECRET = os.environ.get('JWT_SECRET', os.urandom(32).hex())
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
@@ -586,7 +586,7 @@ async def health():
 @api_router.get("/webhook/info")
 async def get_webhook_info():
     """Get webhook URL and format info for TradingView setup"""
-    backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://your-domain.com')
+    backend_url = os.environ.get('BACKEND_URL', os.environ.get('REACT_APP_BACKEND_URL', ''))
     return {
         "webhook_url": f"{backend_url}/api/webhook/tradingview",
         "format": {
