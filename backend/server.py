@@ -184,17 +184,28 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # ======================= DELTA EXCHANGE CLIENT =======================
 
 class DeltaExchangeClient:
-    def __init__(self, api_key: str, api_secret: str, is_testnet: bool = False):
+    def __init__(self, api_key: str, api_secret: str, is_testnet: bool = False, region: str = "india"):
         self.api_key = api_key
         self.api_secret = api_secret
-        # India testnet uses different URL than global testnet
+        self.region = region.lower()
+        
+        # Set base URL based on region and testnet flag
         if is_testnet:
-            self.base_url = "https://cdn-ind.testnet.deltaex.org"
+            if self.region == "global":
+                self.base_url = "https://testnet-api.delta.exchange"
+            else:  # india
+                self.base_url = "https://cdn-ind.testnet.deltaex.org"
         else:
-            self.base_url = "https://api.india.delta.exchange"
+            if self.region == "global":
+                self.base_url = "https://api.delta.exchange"
+            else:  # india
+                self.base_url = "https://api.india.delta.exchange"
+        
+        logger.info(f"Delta Exchange Client initialized - Region: {region}, Testnet: {is_testnet}, URL: {self.base_url}")
         
     def _generate_signature(self, method: str, path: str, query_string: str = "", payload: str = "") -> tuple:
         timestamp = str(int(time.time()))
+        # Signature format: method + timestamp + path + query_string + payload
         signature_data = method + timestamp + path + query_string + payload
         signature = hmac.new(
             self.api_secret.encode('utf-8'),
