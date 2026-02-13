@@ -25,7 +25,8 @@ export default function SettingsPage() {
     // Delta credentials
     const [apiKey, setApiKey] = useState('');
     const [apiSecret, setApiSecret] = useState('');
-    const [isTestnet, setIsTestnet] = useState(false);
+    const [isTestnet, setIsTestnet] = useState(true);
+    const [region, setRegion] = useState('global');
     const [showSecret, setShowSecret] = useState(false);
     const [connecting, setConnecting] = useState(false);
     
