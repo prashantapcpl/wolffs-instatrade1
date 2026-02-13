@@ -354,7 +354,8 @@ async def connect_delta(credentials: DeltaCredentials, current_user: dict = Depe
     delta_client = DeltaExchangeClient(
         api_key=credentials.api_key,
         api_secret=credentials.api_secret,
-        is_testnet=credentials.is_testnet
+        is_testnet=credentials.is_testnet,
+        region=credentials.region
     )
     
     result = await delta_client.test_connection()
@@ -366,7 +367,8 @@ async def connect_delta(credentials: DeltaCredentials, current_user: dict = Depe
                 "delta_credentials": {
                     "api_key": credentials.api_key,
                     "api_secret": credentials.api_secret,
-                    "is_testnet": credentials.is_testnet
+                    "is_testnet": credentials.is_testnet,
+                    "region": credentials.region
                 },
                 "delta_last_connected": datetime.now(timezone.utc).isoformat()
             }}
