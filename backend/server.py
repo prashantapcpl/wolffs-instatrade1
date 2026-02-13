@@ -395,8 +395,8 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
             region=credentials.get("region", "global")
         )
         
+        # Get balance - this is the main check
         balance_result = await delta_client.get_wallet_balance()
-        positions_result = await delta_client.get_positions()
         
         total_balance = "0"
         if balance_result.get("result"):
@@ -405,7 +405,14 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
                     total_balance = bal.get("available_balance", "0")
                     break
         
-        positions_count = len(positions_result.get("result", []))
+        # Try to get positions, but don't fail if it errors
+        positions_count = 0
+        try:
+            positions_result = await delta_client.get_positions()
+            positions_count = len(positions_result.get("result", []))
+        except Exception as pos_err:
+            logger.warning(f"Could not fetch positions (non-critical): {pos_err}")
+            positions_count = 0
         
         return DeltaConnectionStatus(
             is_connected=True,
