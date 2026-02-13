@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -9,11 +9,13 @@ import { ScrollArea } from '../components/ui/scroll-area';
 import { 
     Zap, Settings, LogOut, Bell, Wallet, 
     TrendingUp, TrendingDown, Activity, 
-    ChevronRight, RefreshCw, ExternalLink
+    ChevronRight, RefreshCw, ExternalLink,
+    Wifi, WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+const WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
 export default function DashboardPage() {
     const navigate = useNavigate();
@@ -23,6 +25,87 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
+    const [wsConnected, setWsConnected] = useState(false);
+    const wsRef = useRef(null);
+    const reconnectTimeoutRef = useRef(null);
+
+    // WebSocket connection for real-time alerts
+    const connectWebSocket = useCallback(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+        const ws = new WebSocket(`${WS_URL}/ws/alerts`);
+        
+        ws.onopen = () => {
+            console.log('WebSocket connected');
+            setWsConnected(true);
+            // Send heartbeat every 30 seconds
+            const heartbeat = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send('ping');
+                }
+            }, 30000);
+            ws.heartbeatInterval = heartbeat;
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'new_alert') {
+                    // Add new alert to the top of the list
+                    setAlerts(prev => [data.alert, ...prev]);
+                    
+                    // Show instant toast notification
+                    const alert = data.alert;
+                    toast(
+                        <div className="flex items-center gap-3">
+                            {alert.action === 'BUY' ? (
+                                <TrendingUp className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <TrendingDown className="w-5 h-5 text-red-500" />
+                            )}
+                            <div>
+                                <p className="font-bold">{alert.symbol} {alert.action}</p>
+                                {alert.price && <p className="text-sm text-gray-400">${parseFloat(alert.price).toLocaleString()}</p>}
+                            </div>
+                        </div>,
+                        {
+                            duration: 5000,
+                            style: {
+                                background: alert.action === 'BUY' ? 'rgba(0, 255, 148, 0.1)' : 'rgba(255, 59, 48, 0.1)',
+                                border: `1px solid ${alert.action === 'BUY' ? 'rgba(0, 255, 148, 0.3)' : 'rgba(255, 59, 48, 0.3)'}`,
+                            }
+                        }
+                    );
+                    
+                    // Play notification sound (optional)
+                    try {
+                        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleShCm+LYtWEsMk2R3eLKmVw3P4zesH1+fnx+f4CBg4aJjI+SlZifpq2zub/Fy8/R09TU09LQzcnFv7qynpeMgnd0');
+                        audio.volume = 0.3;
+                        audio.play().catch(() => {});
+                    } catch {}
+                }
+            } catch (e) {
+                console.error('WebSocket message error:', e);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket disconnected');
+            setWsConnected(false);
+            clearInterval(ws.heartbeatInterval);
+            // Reconnect after 2 seconds
+            reconnectTimeoutRef.current = setTimeout(() => {
+                connectWebSocket();
+            }, 2000);
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            setWsConnected(false);
+        };
+
+        wsRef.current = ws;
+    }, []);
 
     const fetchDeltaStatus = useCallback(async () => {
         try {
@@ -50,6 +133,8 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchData();
+        connectWebSocket();
+        
         // Check if first login
         const welcomed = localStorage.getItem('welcomed');
         if (!welcomed) {
@@ -57,13 +142,16 @@ export default function DashboardPage() {
             localStorage.setItem('welcomed', 'true');
         }
         
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchAlerts();
-        }, 30000);
-        
-        return () => clearInterval(interval);
-    }, [fetchData, fetchAlerts]);
+        // Cleanup on unmount
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+            }
+        };
+    }, [fetchData, connectWebSocket]);
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -73,6 +161,9 @@ export default function DashboardPage() {
     };
 
     const handleLogout = () => {
+        if (wsRef.current) {
+            wsRef.current.close();
+        }
         logout();
         navigate('/');
     };
@@ -162,6 +253,11 @@ export default function DashboardPage() {
                         <h1 className="logo-text text-xl text-white uppercase hidden sm:block">
                             Wolffs AutoTrade
                         </h1>
+                        {/* Live indicator */}
+                        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${wsConnected ? 'bg-neon-green-dim text-neon-green' : 'bg-neon-red-dim text-neon-red'}`}>
+                            {wsConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                            <span className="font-mono">{wsConnected ? 'LIVE' : 'OFFLINE'}</span>
+                        </div>
                     </div>
                     
                     <div className="flex items-center gap-3">
@@ -325,6 +421,12 @@ export default function DashboardPage() {
                                 <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
                                     <Bell className="w-4 h-4" />
                                     Trading Alerts
+                                    {wsConnected && (
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green"></span>
+                                        </span>
+                                    )}
                                 </CardTitle>
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-500">
@@ -347,7 +449,7 @@ export default function DashboardPage() {
                                         <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                                         <p className="text-gray-500">No alerts yet</p>
                                         <p className="text-gray-600 text-sm mt-1">
-                                            Alerts from TradingView will appear here
+                                            Alerts from TradingView will appear here instantly
                                         </p>
                                     </div>
                                 ) : (
