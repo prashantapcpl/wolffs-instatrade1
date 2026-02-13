@@ -558,6 +558,18 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
     elif action in ["SELL", "SHORT", "ENTRY_SHORT", "EXIT"]:
         action = "SELL"
     
+    # DEDUPLICATION: Check if similar alert exists within last 10 seconds
+    ten_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
+    existing_alert = await db.alerts.find_one({
+        "symbol": symbol,
+        "action": action,
+        "timestamp": {"$gte": ten_seconds_ago}
+    })
+    
+    if existing_alert:
+        logger.info(f"Duplicate alert ignored: {symbol} {action} (exists from {existing_alert.get('timestamp')})")
+        return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id"), "symbol": symbol, "action": action}
+    
     # Create alert record
     alert_id = str(uuid.uuid4())
     alert_record = {
