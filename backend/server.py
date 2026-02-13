@@ -625,7 +625,7 @@ async def execute_trades_for_alert(alert: dict):
 # ======================= ALERTS ROUTES =======================
 
 @api_router.get("/alerts")
-async def get_alerts(limit: int = 50, current_user: dict = Depends(get_current_user)):
+async def get_alerts(limit: int = 100, current_user: dict = Depends(get_current_user)):
     alerts = await db.alerts.find({}, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
     return {"alerts": alerts}
 
