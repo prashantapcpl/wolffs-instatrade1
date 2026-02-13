@@ -107,6 +107,7 @@ class DeltaCredentials(BaseModel):
     api_key: str
     api_secret: str
     is_testnet: bool = False
+    region: str = "global"  # "india" or "global"
 
 class DeltaConnectionStatus(BaseModel):
     model_config = ConfigDict(extra="ignore")
