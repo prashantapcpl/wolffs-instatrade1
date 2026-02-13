@@ -216,6 +216,11 @@ class DeltaExchangeClient:
         try:
             balance = await self.get_wallet_balance()
             return {"success": True, "balance": balance}
+        except httpx.HTTPStatusError as e:
+            error_detail = f"HTTP {e.response.status_code}: {e.response.text}"
+            if e.response.status_code == 401:
+                error_detail = "Authentication failed. Please check: 1) API Key & Secret are correct, 2) IP is whitelisted in Delta Exchange, 3) Testnet toggle matches where you created keys"
+            return {"success": False, "error": error_detail}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
