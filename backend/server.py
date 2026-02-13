@@ -339,12 +339,24 @@ async def login(user_data: UserLogin):
 
 @api_router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
+    # Fetch fresh user data from database to ensure latest settings
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     return {
-        "id": current_user["id"],
-        "mobile": current_user["mobile"],
-        "name": current_user.get("name"),
-        "has_delta_credentials": current_user.get("delta_credentials") is not None,
-        "trading_settings": current_user.get("trading_settings", {})
+        "id": user["id"],
+        "mobile": user["mobile"],
+        "name": user.get("name"),
+        "has_delta_credentials": user.get("delta_credentials") is not None,
+        "trading_settings": user.get("trading_settings", {
+            "instruments": ["BTC", "ETH"],
+            "trade_futures": True,
+            "trade_options": False,
+            "contract_quantity": 1,
+            "profit_percentage": 75.0,
+            "exit_half_position": False
+        })
     }
 
 # ======================= DELTA EXCHANGE ROUTES =======================
