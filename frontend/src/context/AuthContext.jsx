@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext(null);
@@ -7,29 +7,48 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
+    // Set axios default header whenever token changes
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            fetchUser();
         } else {
-            setLoading(false);
+            delete axios.defaults.headers.common['Authorization'];
         }
     }, [token]);
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback(async () => {
+        const storedToken = localStorage.getItem('token');
+        if (!storedToken) {
+            setLoading(false);
+            return;
+        }
+
         try {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
             const response = await axios.get(`${API_URL}/api/auth/me`);
             setUser(response.data);
+            setToken(storedToken);
         } catch (error) {
             console.error('Failed to fetch user:', error);
-            logout();
+            // Only logout if it's an auth error (401)
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                delete axios.defaults.headers.common['Authorization'];
+                setToken(null);
+                setUser(null);
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    // Fetch user on mount
+    useEffect(() => {
+        fetchUser();
+    }, [fetchUser]);
 
     const login = async (mobile, password) => {
         const response = await axios.post(`${API_URL}/api/auth/login`, {
@@ -60,6 +79,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('welcomed');
         delete axios.defaults.headers.common['Authorization'];
         setToken(null);
         setUser(null);
