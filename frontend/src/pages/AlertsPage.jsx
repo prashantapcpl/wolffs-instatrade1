@@ -128,30 +128,38 @@ export default function AlertsPage() {
     const formatTime = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
-        return date.toLocaleTimeString('en-US', { 
+        // Convert to IST (Indian Standard Time - UTC+5:30)
+        return date.toLocaleTimeString('en-IN', { 
             hour: '2-digit', 
             minute: '2-digit',
             second: '2-digit',
-            hour12: true 
+            hour12: true,
+            timeZone: 'Asia/Kolkata'
         });
     };
 
     const formatDate = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
+        const now = new Date();
         
-        if (date.toDateString() === today.toDateString()) {
+        // Convert both to IST for comparison
+        const dateStr = date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        const todayStr = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        const yesterdayIST = new Date(now);
+        yesterdayIST.setDate(yesterdayIST.getDate() - 1);
+        const yesterdayStr = yesterdayIST.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        
+        if (dateStr === todayStr) {
             return 'Today';
-        } else if (date.toDateString() === yesterday.toDateString()) {
+        } else if (dateStr === yesterdayStr) {
             return 'Yesterday';
         }
-        return date.toLocaleDateString('en-US', { 
+        return date.toLocaleDateString('en-IN', { 
             weekday: 'short',
             month: 'short', 
-            day: 'numeric' 
+            day: 'numeric',
+            timeZone: 'Asia/Kolkata'
         });
     };
 
