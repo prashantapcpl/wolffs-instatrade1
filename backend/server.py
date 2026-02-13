@@ -187,7 +187,11 @@ class DeltaExchangeClient:
     def __init__(self, api_key: str, api_secret: str, is_testnet: bool = False):
         self.api_key = api_key
         self.api_secret = api_secret
-        self.base_url = "https://testnet-api.delta.exchange" if is_testnet else "https://api.india.delta.exchange"
+        # India testnet uses different URL than global testnet
+        if is_testnet:
+            self.base_url = "https://cdn-ind.testnet.deltaex.org"
+        else:
+            self.base_url = "https://api.india.delta.exchange"
         
     def _generate_signature(self, method: str, path: str, query_string: str = "", payload: str = "") -> tuple:
         timestamp = str(int(time.time()))
