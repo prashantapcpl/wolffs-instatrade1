@@ -391,7 +391,8 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
         delta_client = DeltaExchangeClient(
             api_key=credentials["api_key"],
             api_secret=credentials["api_secret"],
-            is_testnet=credentials.get("is_testnet", False)
+            is_testnet=credentials.get("is_testnet", False),
+            region=credentials.get("region", "global")
         )
         
         balance_result = await delta_client.get_wallet_balance()
