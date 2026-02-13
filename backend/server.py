@@ -589,6 +589,11 @@ async def execute_trades_for_alert(alert: dict):
     symbol = alert["symbol"]
     action = alert["action"]
     
+    # Clean up symbol - remove .P suffix and other variations
+    # BTCUSD.P -> BTC, ETHUSD.P -> ETH
+    clean_symbol = symbol.upper().replace(".P", "").replace("USD", "").replace("USDT", "").replace("PERP", "")
+    logger.info(f"Processing trade for symbol: {symbol} -> cleaned: {clean_symbol}, action: {action}")
+    
     # Find users with Delta credentials and matching instrument settings
     users = await db.users.find({
         "delta_credentials": {"$ne": None}
@@ -601,11 +606,17 @@ async def execute_trades_for_alert(alert: dict):
         # Check if symbol matches user's instruments
         should_trade = False
         for inst in instruments:
-            if inst.upper() in symbol:
+            if inst.upper() in clean_symbol or clean_symbol in inst.upper():
                 should_trade = True
+                logger.info(f"Symbol {clean_symbol} matches instrument {inst}")
                 break
         
-        if not should_trade or not settings.get("trade_futures", True):
+        if not should_trade:
+            logger.info(f"Symbol {clean_symbol} does not match any instruments: {instruments}")
+            continue
+            
+        if not settings.get("trade_futures", True):
+            logger.info(f"Futures trading disabled for user {user['id']}")
             continue
         
         try:
@@ -613,19 +624,31 @@ async def execute_trades_for_alert(alert: dict):
             delta_client = DeltaExchangeClient(
                 api_key=credentials["api_key"],
                 api_secret=credentials["api_secret"],
-                is_testnet=credentials.get("is_testnet", False)
+                is_testnet=credentials.get("is_testnet", False),
+                region=credentials.get("region", "global")
             )
             
             # Get product ID
             products = await delta_client.get_products()
             product_id = None
+            product_symbol = None
+            
             for p in products.get("result", []):
-                if symbol.replace("USD", "") in p.get("symbol", "") and p.get("product_type") == "perpetual_futures":
+                p_symbol = p.get("symbol", "").upper()
+                p_type = p.get("product_type", "")
+                
+                # Match BTC or ETH in product symbol for perpetual futures
+                if clean_symbol in p_symbol and p_type == "perpetual_futures":
                     product_id = p["id"]
+                    product_symbol = p["symbol"]
+                    logger.info(f"Found matching product: {product_symbol} (ID: {product_id})")
                     break
             
             if not product_id:
-                logger.warning(f"No matching product found for {symbol}")
+                logger.warning(f"No matching product found for {symbol} (cleaned: {clean_symbol})")
+                # Log available products for debugging
+                available = [p.get("symbol") for p in products.get("result", []) if p.get("product_type") == "perpetual_futures"]
+                logger.info(f"Available perpetual products: {available[:10]}")
                 continue
             
             # Calculate quantity
