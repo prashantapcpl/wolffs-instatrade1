@@ -33,7 +33,7 @@ export default function DashboardPage() {
     const connectWebSocket = useCallback(() => {
         if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-        const ws = new WebSocket(`${WS_URL}/ws/alerts`);
+        const ws = new WebSocket(`${WS_URL}/api/ws/alerts`);
         
         ws.onopen = () => {
             console.log('WebSocket connected');
