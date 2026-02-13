@@ -95,8 +95,13 @@
     }
     
     .input-dark {
-        @apply bg-obsidian border border-white/10 text-white placeholder:text-gray-600 focus:border-neon-green focus:ring-1 focus:ring-neon-green rounded-md h-10 px-3 font-mono text-sm;
+        @apply bg-obsidian border border-white/10 text-white placeholder:text-gray-600 focus:border-neon-green focus:ring-1 focus:ring-neon-green rounded-md h-10 pr-3 font-mono text-sm;
         transition: border-color 0.2s ease;
+        padding-left: 0.75rem;
+    }
+    
+    .input-dark.pl-10 {
+        padding-left: 2.5rem !important;
     }
     
     .status-active {
