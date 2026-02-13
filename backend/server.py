@@ -653,9 +653,12 @@ async def root():
 async def health():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
-# ======================= WEBSOCKET ENDPOINT =======================
+# Include the router in the main app
+app.include_router(api_router)
 
-@app.websocket("/ws/alerts")
+# ======================= WEBSOCKET ENDPOINT (must be on main app) =======================
+
+@app.websocket("/api/ws/alerts")
 async def websocket_alerts(websocket: WebSocket):
     """WebSocket endpoint for real-time alert updates"""
     await ws_manager.connect(websocket)
