@@ -1,0 +1,415 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { 
+    Zap, Settings, LogOut, Bell, Wallet, 
+    TrendingUp, TrendingDown, Activity, 
+    ChevronRight, RefreshCw, ExternalLink
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+export default function DashboardPage() {
+    const navigate = useNavigate();
+    const { user, logout, refreshUser } = useAuth();
+    const [deltaStatus, setDeltaStatus] = useState(null);
+    const [alerts, setAlerts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(false);
+
+    const fetchDeltaStatus = useCallback(async () => {
+        try {
+            const response = await axios.get(`${API_URL}/api/delta/status`);
+            setDeltaStatus(response.data);
+        } catch (error) {
+            console.error('Failed to fetch delta status:', error);
+        }
+    }, []);
+
+    const fetchAlerts = useCallback(async () => {
+        try {
+            const response = await axios.get(`${API_URL}/api/alerts`);
+            setAlerts(response.data.alerts || []);
+        } catch (error) {
+            console.error('Failed to fetch alerts:', error);
+        }
+    }, []);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        await Promise.all([fetchDeltaStatus(), fetchAlerts()]);
+        setLoading(false);
+    }, [fetchDeltaStatus, fetchAlerts]);
+
+    useEffect(() => {
+        fetchData();
+        // Check if first login
+        const welcomed = localStorage.getItem('welcomed');
+        if (!welcomed) {
+            setShowWelcome(true);
+            localStorage.setItem('welcomed', 'true');
+        }
+        
+        // Auto-refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchAlerts();
+        }, 30000);
+        
+        return () => clearInterval(interval);
+    }, [fetchData, fetchAlerts]);
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchData();
+        setRefreshing(false);
+        toast.success('Data refreshed');
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
+    const dismissWelcome = () => {
+        setShowWelcome(false);
+    };
+
+    const formatTime = (timestamp) => {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+    };
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (date.toDateString() === today.toDateString()) {
+            return 'Today';
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday';
+        }
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    return (
+        <div className="min-h-screen bg-obsidian">
+            {/* Welcome Modal */}
+            {showWelcome && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                    <Card className="bg-surface border-white/10 max-w-md w-full animate-fade-in">
+                        <CardHeader>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-neon-green rounded-md flex items-center justify-center">
+                                    <Zap className="w-6 h-6 text-black" />
+                                </div>
+                                <CardTitle className="text-xl font-headings text-white uppercase">
+                                    Welcome to Wolffs AutoTrade!
+                                </CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-gray-300">
+                                Your automated trading dashboard is ready. To get started:
+                            </p>
+                            <ol className="space-y-2 text-gray-400 text-sm">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">1.</span>
+                                    Connect your Delta Exchange account in Settings
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">2.</span>
+                                    Configure your trading instruments (BTC/ETH)
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">3.</span>
+                                    Set up TradingView webhook with the provided URL
+                                </li>
+                            </ol>
+                            <Button 
+                                onClick={dismissWelcome}
+                                data-testid="welcome-dismiss-btn"
+                                className="w-full btn-primary"
+                            >
+                                Got it, Let's Go!
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Header */}
+            <header className="border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-40">
+                <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-neon-green rounded-md flex items-center justify-center">
+                            <Zap className="w-5 h-5 text-black" />
+                        </div>
+                        <h1 className="logo-text text-xl text-white uppercase hidden sm:block">
+                            Wolffs AutoTrade
+                        </h1>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleRefresh}
+                            data-testid="refresh-btn"
+                            className="text-gray-400 hover:text-white hover:bg-white/10"
+                            disabled={refreshing}
+                        >
+                            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate('/settings')}
+                            data-testid="settings-btn"
+                            className="text-gray-400 hover:text-white hover:bg-white/10"
+                        >
+                            <Settings className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleLogout}
+                            data-testid="logout-btn"
+                            className="text-gray-400 hover:text-neon-red hover:bg-neon-red/10"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </Button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="max-w-[1600px] mx-auto p-4 md:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+                    {/* Broker Status Card */}
+                    <div className="col-span-12 md:col-span-4 space-y-4">
+                        <Card 
+                            className="card-dark card-hover cursor-pointer"
+                            onClick={() => navigate('/settings')}
+                            data-testid="broker-status-card"
+                        >
+                            <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider">
+                                        Broker Status
+                                    </CardTitle>
+                                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className={`status-indicator ${deltaStatus?.is_connected ? 'status-connected' : 'status-disconnected'}`} />
+                                    <span className="text-white font-medium">
+                                        Delta Exchange
+                                    </span>
+                                    <Badge 
+                                        variant="outline" 
+                                        className={deltaStatus?.is_connected ? 'bg-buy' : 'bg-sell'}
+                                    >
+                                        {deltaStatus?.is_connected ? 'Connected' : 'Disconnected'}
+                                    </Badge>
+                                </div>
+                                
+                                {deltaStatus?.is_connected && (
+                                    <div className="space-y-3 pt-3 border-t border-white/10">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-400 text-sm flex items-center gap-2">
+                                                <Wallet className="w-4 h-4" />
+                                                Balance
+                                            </span>
+                                            <span className="text-white font-mono">
+                                                ${parseFloat(deltaStatus.balance || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-400 text-sm flex items-center gap-2">
+                                                <Activity className="w-4 h-4" />
+                                                Open Positions
+                                            </span>
+                                            <span className="text-white font-mono">
+                                                {deltaStatus.positions_count || 0}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {!deltaStatus?.is_connected && (
+                                    <p className="text-gray-500 text-sm mt-2">
+                                        Click to connect your Delta Exchange account
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Trading Settings Quick View */}
+                        <Card className="card-dark">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider">
+                                    Trading Config
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400 text-sm">Instruments</span>
+                                        <div className="flex gap-1">
+                                            {(user?.trading_settings?.instruments || ['BTC', 'ETH']).map(inst => (
+                                                <Badge key={inst} variant="outline" className="text-xs bg-white/5">
+                                                    {inst}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400 text-sm">Mode</span>
+                                        <span className="text-white text-sm font-mono">
+                                            {user?.trading_settings?.trade_futures ? 'Futures' : 'Options'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400 text-sm">Contracts</span>
+                                        <span className="text-white text-sm font-mono">
+                                            {user?.trading_settings?.contract_quantity || 1}
+                                        </span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Webhook Info */}
+                        <Card className="card-dark">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <ExternalLink className="w-4 h-4" />
+                                    Webhook URL
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <code className="text-xs text-neon-green bg-obsidian p-2 rounded block break-all">
+                                    {API_URL}/api/webhook/tradingview
+                                </code>
+                                <p className="text-gray-500 text-xs mt-2">
+                                    Use this URL in TradingView alerts
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Alerts Window */}
+                    <Card 
+                        className="col-span-12 md:col-span-8 card-dark cursor-pointer"
+                        onClick={() => navigate('/alerts')}
+                        data-testid="alerts-card"
+                    >
+                        <CardHeader className="pb-2 border-b border-white/10">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Bell className="w-4 h-4" />
+                                    Trading Alerts
+                                </CardTitle>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">
+                                        {alerts.length} alerts
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <ScrollArea className="h-[500px]">
+                                {loading ? (
+                                    <div className="p-6 space-y-4">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div key={i} className="skeleton h-16 rounded-sm" />
+                                        ))}
+                                    </div>
+                                ) : alerts.length === 0 ? (
+                                    <div className="p-12 text-center">
+                                        <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                                        <p className="text-gray-500">No alerts yet</p>
+                                        <p className="text-gray-600 text-sm mt-1">
+                                            Alerts from TradingView will appear here
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-white/5">
+                                        {alerts.map((alert, index) => (
+                                            <div 
+                                                key={alert.id || index}
+                                                className="alert-item p-4 hover:bg-white/5"
+                                                style={{ animationDelay: `${index * 50}ms` }}
+                                            >
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-sm flex items-center justify-center ${
+                                                            alert.action === 'BUY' 
+                                                                ? 'bg-neon-green-dim' 
+                                                                : 'bg-neon-red-dim'
+                                                        }`}>
+                                                            {alert.action === 'BUY' ? (
+                                                                <TrendingUp className="w-5 h-5 text-neon-green" />
+                                                            ) : (
+                                                                <TrendingDown className="w-5 h-5 text-neon-red" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-white font-medium font-mono">
+                                                                    {alert.symbol}
+                                                                </span>
+                                                                <Badge className={alert.action === 'BUY' ? 'bg-buy' : 'bg-sell'}>
+                                                                    {alert.action}
+                                                                </Badge>
+                                                            </div>
+                                                            {alert.price && (
+                                                                <p className="text-gray-400 text-sm font-mono mt-1">
+                                                                    @ ${parseFloat(alert.price).toLocaleString()}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-gray-500 text-xs font-mono">
+                                                            {formatDate(alert.timestamp)}
+                                                        </p>
+                                                        <p className="text-gray-400 text-sm font-mono">
+                                                            {formatTime(alert.timestamp)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {alert.message && (
+                                                    <p className="text-gray-500 text-sm mt-2 pl-13">
+                                                        {alert.message}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
+        </div>
+    );
+}
