@@ -532,6 +532,9 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
     await db.alerts.insert_one(alert_record)
     logger.info(f"Alert saved: {alert_id} - {symbol} {action}")
     
+    # INSTANT BROADCAST via WebSocket to all connected clients
+    await ws_manager.broadcast_alert(alert_record)
+    
     # Execute trades for all users with matching instruments
     if action in ["BUY", "SELL"]:
         background_tasks.add_task(execute_trades_for_alert, alert_record)
