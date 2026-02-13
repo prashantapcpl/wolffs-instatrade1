@@ -399,11 +399,26 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
         balance_result = await delta_client.get_wallet_balance()
         
         total_balance = "0"
+        balance_currency = "USDT"
         if balance_result.get("result"):
+            # Try to find any non-zero balance
             for bal in balance_result["result"]:
-                if bal.get("asset_symbol") == "USDT":
-                    total_balance = bal.get("available_balance", "0")
+                available = float(bal.get("available_balance", 0) or 0)
+                if available > 0:
+                    total_balance = str(available)
+                    balance_currency = bal.get("asset_symbol", "USDT")
                     break
+            # If no non-zero balance found, show USDT or first available
+            if total_balance == "0" and balance_result["result"]:
+                for bal in balance_result["result"]:
+                    if bal.get("asset_symbol") == "USDT":
+                        total_balance = bal.get("available_balance", "0") or "0"
+                        break
+                # If still 0, take first balance
+                if total_balance == "0":
+                    first_bal = balance_result["result"][0]
+                    total_balance = first_bal.get("available_balance", "0") or "0"
+                    balance_currency = first_bal.get("asset_symbol", "USD")
         
         # Try to get positions, but don't fail if it errors
         positions_count = 0
