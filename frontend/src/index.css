@@ -37,10 +37,6 @@
         @apply border-border;
     }
     
-    html {
-        @apply dark;
-    }
-    
     body {
         @apply bg-obsidian text-white font-body antialiased;
         margin: 0;
