@@ -525,9 +525,18 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
                     body = {"message": str(body)}
             except json.JSONDecodeError:
                 # Not JSON, treat as plain text message
-                # Try to parse common formats like "BUY BTCUSD" or "BTCUSD BUY"
-                parts = body_text.strip().upper().split()
-                if len(parts) >= 2:
+                body_upper = body_text.strip().upper()
+                parts = body_upper.split()
+                
+                # Handle single word alerts like "BUY" or "SELL"
+                if len(parts) == 1:
+                    if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
+                        # Single action word - we'll need to infer symbol from user settings
+                        body = {"action": parts[0], "symbol": "BTCUSD", "inferred": True}
+                    else:
+                        body = {"message": body_text}
+                elif len(parts) >= 2:
+                    # Try to parse common formats like "BUY BTCUSD" or "BTCUSD BUY"
                     if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
                         body = {"action": parts[0], "symbol": parts[1]}
                     elif parts[1] in ["BUY", "SELL", "LONG", "SHORT"]:
