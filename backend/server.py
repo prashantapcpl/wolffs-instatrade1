@@ -457,7 +457,13 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
         positions_count = 0
         try:
             positions_result = await delta_client.get_positions()
-            positions_count = len(positions_result.get("result", []))
+            positions_list = positions_result.get("result", [])
+            # Count only positions with non-zero size
+            for pos in positions_list:
+                size = abs(float(pos.get("size", 0) or 0))
+                if size > 0:
+                    positions_count += 1
+                    logger.info(f"Position found: {pos.get('product_symbol')} size={size}")
         except Exception as pos_err:
             logger.warning(f"Could not fetch positions (non-critical): {pos_err}")
             positions_count = 0
