@@ -257,8 +257,48 @@ export default function SettingsPage() {
                                         data-testid="testnet-switch"
                                     />
                                     <Label htmlFor="testnet" className="text-gray-300">
-                                        Use Testnet (for testing)
+                                        Use Testnet (Demo Account)
                                     </Label>
+                                </div>
+
+                                {/* Region Selector */}
+                                <div className="space-y-2">
+                                    <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
+                                        Region (where you created API keys)
+                                    </Label>
+                                    <div className="flex gap-3">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setRegion('global')}
+                                            data-testid="region-global-btn"
+                                            className={`flex-1 ${region === 'global' 
+                                                ? 'bg-neon-green text-black border-neon-green' 
+                                                : 'btn-secondary'}`}
+                                        >
+                                            Global (testnet.delta.exchange)
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setRegion('india')}
+                                            data-testid="region-india-btn"
+                                            className={`flex-1 ${region === 'india' 
+                                                ? 'bg-neon-green text-black border-neon-green' 
+                                                : 'btn-secondary'}`}
+                                        >
+                                            India (testnet.india.delta.exchange)
+                                        </Button>
+                                    </div>
+                                    <p className="text-gray-500 text-xs">
+                                        {isTestnet 
+                                            ? (region === 'global' 
+                                                ? '→ Will connect to: testnet-api.delta.exchange' 
+                                                : '→ Will connect to: cdn-ind.testnet.deltaex.org')
+                                            : (region === 'global'
+                                                ? '→ Will connect to: api.delta.exchange'
+                                                : '→ Will connect to: api.india.delta.exchange')}
+                                    </p>
                                 </div>
                                 
                                 <div className="flex items-center gap-4">
