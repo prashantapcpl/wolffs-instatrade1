@@ -650,6 +650,24 @@ async def root():
 async def health():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# ======================= WEBSOCKET ENDPOINT =======================
+
+@app.websocket("/ws/alerts")
+async def websocket_alerts(websocket: WebSocket):
+    """WebSocket endpoint for real-time alert updates"""
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive, listen for any client messages
+            data = await websocket.receive_text()
+            # Echo back as heartbeat
+            await websocket.send_text(json.dumps({"type": "pong"}))
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        ws_manager.disconnect(websocket)
+
 # ======================= WEBHOOK INFO =======================
 
 @api_router.get("/webhook/info")
