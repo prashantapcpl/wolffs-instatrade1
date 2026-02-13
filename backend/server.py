@@ -251,7 +251,16 @@ class DeltaExchangeClient:
         return await self._make_request("GET", "/v2/wallet/balances", authenticated=True)
     
     async def get_positions(self) -> dict:
-        return await self._make_request("GET", "/v2/positions", authenticated=True)
+        # Try margined positions endpoint first (for India)
+        try:
+            return await self._make_request("GET", "/v2/positions/margined", authenticated=True)
+        except Exception as e:
+            logger.warning(f"Margined positions failed, trying regular: {e}")
+            try:
+                return await self._make_request("GET", "/v2/positions", authenticated=True)
+            except Exception as e2:
+                logger.warning(f"Regular positions also failed: {e2}")
+                return {"result": []}
     
     async def get_products(self) -> dict:
         return await self._make_request("GET", "/v2/products")
