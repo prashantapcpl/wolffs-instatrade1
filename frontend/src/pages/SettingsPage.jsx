@@ -85,7 +85,8 @@ export default function SettingsPage() {
             await axios.post(`${API_URL}/api/delta/connect`, {
                 api_key: apiKey,
                 api_secret: apiSecret,
-                is_testnet: isTestnet
+                is_testnet: isTestnet,
+                region: region
             });
             toast.success('Delta Exchange connected successfully!');
             setApiKey('');
