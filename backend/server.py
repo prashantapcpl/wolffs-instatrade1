@@ -650,8 +650,8 @@ async def execute_trades_for_alert(alert: dict):
             if not product_id:
                 logger.warning(f"No matching product found for {symbol} (cleaned: {clean_symbol})")
                 # Log available products for debugging
-                available = [p.get("symbol") for p in products.get("result", []) if p.get("product_type") == "perpetual_futures"]
-                logger.info(f"Available perpetual products: {available[:10]}")
+                available = [p.get("symbol") for p in products.get("result", []) if clean_symbol in p.get("symbol", "").upper()]
+                logger.info(f"Products containing {clean_symbol}: {available[:10]}")
                 continue
             
             # Calculate quantity
