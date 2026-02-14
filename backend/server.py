@@ -278,7 +278,6 @@ async def init_plan_config():
         logger.info("Alert locks TTL index created")
     except Exception as e:
         logger.info(f"Alert locks TTL index already exists or error: {e}")
-        })
 
 # ======================= UTILITIES =======================
 
