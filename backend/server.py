@@ -124,6 +124,8 @@ class TradingSettings(BaseModel):
     contract_quantity: int = 1
     profit_percentage: float = 75.0
     exit_half_position: bool = False
+    subscriber_type: str = "wolffs_alerts"  # "wolffs_alerts" or "custom_strategy"
+    webhook_id: Optional[str] = None  # Unique webhook ID for custom_strategy users
 
 class TradingViewAlert(BaseModel):
     symbol: str
