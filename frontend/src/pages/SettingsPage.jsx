@@ -13,7 +13,7 @@ import {
     ArrowLeft, Zap, Link2, Unlink, Save, 
     ExternalLink, PlayCircle, Eye, EyeOff,
     Bitcoin, Activity, Copy, Check, Trash2, RefreshCw,
-    Users, User, Lock, Key
+    Users, User, Lock, Key, Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 
