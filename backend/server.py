@@ -128,7 +128,9 @@ class TradingSettings(BaseModel):
     instruments: List[str] = ["BTC", "ETH"]
     trade_futures: bool = True
     trade_options: bool = False
-    contract_quantity: int = 1
+    btc_lot_size: int = 1  # Separate lot size for BTC
+    eth_lot_size: int = 1  # Separate lot size for ETH
+    contract_quantity: int = 1  # Legacy field - will use instrument-specific
     profit_percentage: float = 75.0
     exit_half_position: bool = False
     subscriber_type: str = "wolffs_alerts"  # "wolffs_alerts" or "custom_strategy"
