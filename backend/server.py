@@ -1227,49 +1227,59 @@ async def execute_trades_for_alert(alert: dict):
                 if not product_id:
                     logger.warning(f"No matching {strategy_type} product found for {instrument}")
                     continue
-            
-            # Place order
-            side = "buy" if action == "BUY" else "sell"
-            logger.info(f"Placing {side} order: product_id={product_id}, size={quantity}, user={user['id']}")
-            
-            try:
-                result = await delta_client.place_order(
-                    product_id=product_id,
-                    order_type="market_order",
-                    size=quantity,
-                    side=side
-                )
                 
-                logger.info(f"Order placed successfully for user {user['id']}: {result}")
+                # Place order
+                side = "buy" if action == "BUY" else "sell"
+                logger.info(f"Placing {side} {strategy_type} order: product_id={product_id}, size={quantity}, user={user['id']}")
                 
-                # Record trade
-                trade_record = {
-                    "id": str(uuid.uuid4()),
-                    "user_id": user["id"],
-                    "alert_id": alert["id"],
-                    "symbol": symbol,
-                    "product_symbol": product_symbol,
-                    "action": action,
-                    "side": side,
-                    "quantity": quantity,
-                    "product_id": product_id,
-                    "result": result,
-                    "status": "success",
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
-                await db.trades.insert_one(trade_record)
-                
-            except Exception as order_err:
-                logger.error(f"Order placement failed for user {user['id']}: {order_err}")
-                # Record failed trade
-                await db.trades.insert_one({
-                    "id": str(uuid.uuid4()),
-                    "user_id": user["id"],
-                    "alert_id": alert["id"],
-                    "symbol": symbol,
-                    "action": action,
-                    "quantity": quantity,
-                    "status": "failed",
+                try:
+                    result = await delta_client.place_order(
+                        product_id=product_id,
+                        order_type="market_order",
+                        size=quantity,
+                        side=side
+                    )
+                    
+                    logger.info(f"Order placed successfully for user {user['id']}: {result}")
+                    
+                    # Record trade
+                    trade_record = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": user["id"],
+                        "alert_id": alert["id"],
+                        "symbol": symbol,
+                        "product_symbol": product_symbol,
+                        "strategy_type": strategy_type,
+                        "instrument": instrument,
+                        "action": action,
+                        "side": side,
+                        "quantity": quantity,
+                        "product_id": product_id,
+                        "result": result,
+                        "status": "success",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                    await db.trades.insert_one(trade_record)
+                    
+                except Exception as order_err:
+                    logger.error(f"Order placement failed for user {user['id']}: {order_err}")
+                    # Record failed trade
+                    await db.trades.insert_one({
+                        "id": str(uuid.uuid4()),
+                        "user_id": user["id"],
+                        "alert_id": alert["id"],
+                        "symbol": symbol,
+                        "strategy_type": strategy_type,
+                        "instrument": instrument,
+                        "action": action,
+                        "quantity": quantity,
+                        "status": "failed",
+                        "error": str(order_err),
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                    
+        except Exception as e:
+            logger.error(f"Trade execution failed for user {user['id']}: {e}")
                     "error": str(order_err),
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 })
