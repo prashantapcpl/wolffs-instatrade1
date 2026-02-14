@@ -439,6 +439,15 @@ export default function AdminPage() {
                             <div className="space-y-3">
                                 <h4 className="text-white font-medium">WolffsInsta Alerts</h4>
                                 <div className="space-y-2">
+                                    <Label className="text-gray-400 text-xs">Description</Label>
+                                    <Textarea
+                                        value={plans.wolffs_alerts?.description || ''}
+                                        onChange={(e) => updatePlanField('wolffs_alerts', 'description', e.target.value)}
+                                        className="input-dark min-h-[60px] text-sm"
+                                        placeholder="Plan description..."
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <Label className="text-gray-400 text-xs">Price (INR)</Label>
                                     <Input
                                         type="number"
