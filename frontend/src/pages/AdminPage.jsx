@@ -215,6 +215,49 @@ export default function AdminPage() {
                 </div>
             )}
 
+            {/* Delete Confirmation Modal */}
+            {userToDelete && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                    <Card className="bg-surface border-white/10 max-w-md w-full">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg text-neon-red flex items-center gap-2">
+                                    <Trash2 className="w-5 h-5" />
+                                    Delete User
+                                </CardTitle>
+                                <button onClick={() => setUserToDelete(null)} className="text-gray-400 hover:text-white">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-gray-400">
+                                Are you sure you want to delete <strong className="text-white">{userToDelete.name || userToDelete.mobile}</strong>?
+                            </p>
+                            <p className="text-neon-red text-sm">
+                                This action cannot be undone. All user data, alerts, and trades will be permanently deleted.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={() => handleDeleteUser(userToDelete.id)}
+                                    className="flex-1 bg-neon-red hover:bg-neon-red/80 text-white"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete User
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setUserToDelete(null)}
+                                    className="btn-secondary"
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
             {/* Header */}
             <header className="border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-40">
                 <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-4 flex items-center gap-4">
