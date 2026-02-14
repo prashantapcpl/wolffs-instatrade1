@@ -235,30 +235,37 @@ export default function DashboardPage() {
                                     <Zap className="w-6 h-6 text-black" />
                                 </div>
                                 <CardTitle className="text-xl font-headings text-white uppercase">
-                                    Welcome to Wolffs AutoTrade!
+                                    {welcomeConfig?.title || "Welcome to Wolffs AutoTrade!"}
                                 </CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-gray-300">
-                                Your automated trading dashboard is ready. To get started:
+                                {welcomeConfig?.description || "Your automated trading dashboard is ready. To get started:"}
                             </p>
                             <ol className="space-y-2 text-gray-400 text-sm">
-                                <li className="flex items-start gap-2">
-                                    <span className="text-neon-green font-mono">1.</span>
-                                    Connect your Delta Exchange account in Settings
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-neon-green font-mono">2.</span>
-                                    Configure your trading instruments (BTC/ETH)
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="text-neon-green font-mono">3.</span>
-                                    Set up TradingView webhook with the provided URL
-                                </li>
+                                {(welcomeConfig?.steps || [
+                                    "Connect your Delta Exchange account in Settings",
+                                    "Configure your trading instruments (BTC/ETH)",
+                                    "Set up TradingView webhook with the provided URL"
+                                ]).map((step, index) => (
+                                    <li key={index} className="flex items-start gap-2">
+                                        <span className="text-neon-green font-mono">{index + 1}.</span>
+                                        {step}
+                                    </li>
+                                ))}
                             </ol>
                             <Button 
                                 onClick={dismissWelcome}
+                                data-testid="welcome-dismiss-btn"
+                                className="w-full btn-primary"
+                            >
+                                {welcomeConfig?.button_text || "Got it, Let's Go!"}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
                                 data-testid="welcome-dismiss-btn"
                                 className="w-full btn-primary"
                             >
