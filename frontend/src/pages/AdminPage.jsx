@@ -480,6 +480,15 @@ export default function AdminPage() {
                             <div className="space-y-3">
                                 <h4 className="text-white font-medium">Custom Strategy</h4>
                                 <div className="space-y-2">
+                                    <Label className="text-gray-400 text-xs">Description</Label>
+                                    <Textarea
+                                        value={plans.custom_strategy?.description || ''}
+                                        onChange={(e) => updatePlanField('custom_strategy', 'description', e.target.value)}
+                                        className="input-dark min-h-[60px] text-sm"
+                                        placeholder="Plan description..."
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <Label className="text-gray-400 text-xs">Price (INR)</Label>
                                     <Input
                                         type="number"
