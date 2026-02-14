@@ -1033,39 +1033,57 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         body = {}
     
     # Parse alert data
-    symbol = "UNKNOWN"
-    action = "UNKNOWN"
+    symbol = None  # Start with None, not "UNKNOWN"
+    action = None
     price = None
     message = ""
-    strategy_type = "both"  # Default: execute on all enabled strategies
+    strategy_type = "both"
     
     if isinstance(body, dict):
-        symbol = str(body.get("symbol", body.get("ticker", "UNKNOWN"))).upper()
-        action = str(body.get("action", body.get("strategy.order.action", ""))).upper()
+        symbol = body.get("symbol", body.get("ticker"))
+        if symbol:
+            symbol = str(symbol).upper()
+        action = body.get("action", body.get("strategy.order.action"))
+        if action:
+            action = str(action).upper()
         price = body.get("price", body.get("close"))
         message = str(body.get("message", body.get("comment", "")))
-        # NEW: Get strategy type from webhook payload
-        # Accepts: "futures", "options", "both" (default)
         strategy_type = str(body.get("strategy", body.get("product", body.get("type", "both")))).lower()
         if strategy_type not in ["futures", "options", "both"]:
             strategy_type = "both"
     
-    # Normalize symbol - clean up various formats
-    # BTCUSD.P, BTCUSD, BTCUSDT, BTC-USD -> BTCUSD
-    # ETHUSD.P, ETHUSD, ETHUSDT, ETH-USD -> ETHUSD
-    original_symbol = symbol
-    symbol = symbol.upper().replace(".P", "").replace("-", "").replace("USDT", "USD")
-    if symbol == "BTC" or symbol.startswith("BTC"):
-        symbol = "BTCUSD"
-    elif symbol == "ETH" or symbol.startswith("ETH"):
-        symbol = "ETHUSD"
+    # REJECT alerts without proper symbol - plain text like "BUY" or "SELL" alone is invalid
+    if not symbol:
+        logger.warning(f"Alert rejected: No symbol in payload. Raw data: {body_text[:100]}")
+        return {"status": "rejected", "reason": "No symbol specified in webhook payload. Use JSON format with 'symbol' field."}
     
-    # Determine instrument from symbol
+    # REJECT alerts without proper action
+    if not action:
+        logger.warning(f"Alert rejected: No action in payload. Raw data: {body_text[:100]}")
+        return {"status": "rejected", "reason": "No action specified in webhook payload. Use JSON format with 'action' field."}
+    
+    # Normalize symbol - clean up various formats
+    original_symbol = symbol
+    symbol = symbol.replace(".P", "").replace("-", "").replace("USDT", "USD")
+    # Ensure it ends with USD for standard format
+    if symbol in ["BTC", "BITCOIN"]:
+        symbol = "BTCUSD"
+    elif symbol in ["ETH", "ETHEREUM"]:
+        symbol = "ETHUSD"
+    elif not symbol.endswith("USD"):
+        symbol = symbol + "USD"
+    
+    # Determine instrument from symbol - MUST be explicit
     instrument = None
-    if "BTC" in symbol:
+    if symbol == "BTCUSD" or symbol.startswith("BTC"):
         instrument = "BTC"
-    elif "ETH" in symbol:
+        symbol = "BTCUSD"  # Normalize
+    elif symbol == "ETHUSD" or symbol.startswith("ETH"):
         instrument = "ETH"
+        symbol = "ETHUSD"  # Normalize
+    else:
+        logger.warning(f"Alert rejected: Unknown instrument for symbol {symbol}")
+        return {"status": "rejected", "reason": f"Unknown instrument for symbol: {symbol}. Only BTCUSD and ETHUSD supported."}
     
     logger.info(f"Parsed alert: original={original_symbol}, normalized={symbol}, instrument={instrument}, action={action}")
     
@@ -1074,25 +1092,21 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         action = "BUY"
     elif action in ["SELL", "SHORT", "ENTRY_SHORT", "EXIT"]:
         action = "SELL"
+    else:
+        logger.warning(f"Alert rejected: Invalid action {action}")
+        return {"status": "rejected", "reason": f"Invalid action: {action}. Use BUY or SELL."}
     
-    # Reject alerts with unknown symbol or action
-    if symbol == "UNKNOWN" or action not in ["BUY", "SELL"] or not instrument:
-        logger.warning(f"Invalid alert rejected: symbol={symbol}, action={action}, instrument={instrument}")
-        return {"status": "rejected", "reason": "Invalid symbol or action"}
-    
-    # DEDUPLICATION: Check if similar alert exists within last 10 seconds
-    # Use normalized symbol and instrument for dedup
-    ten_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
+    # STRICT DEDUPLICATION: Check if identical alert exists within last 30 seconds
+    thirty_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=30)).isoformat()
     existing_alert = await db.alerts.find_one({
-        "instrument": instrument,  # Use instrument instead of raw symbol
+        "instrument": instrument,
         "action": action,
         "source": source,
-        "source_id": source_id,
-        "timestamp": {"$gte": ten_seconds_ago}
+        "timestamp": {"$gte": thirty_seconds_ago}
     })
     
     if existing_alert:
-        logger.info(f"Duplicate alert ignored: {instrument} {action} (existing: {existing_alert.get('id')})")
+        logger.info(f"Duplicate alert ignored: {instrument} {action} (existing ID: {existing_alert.get('id')})")
         return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
         return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
     
