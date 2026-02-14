@@ -926,6 +926,8 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
             "instruments": settings.get("instruments", ["BTC", "ETH"]),
             "trade_futures": settings.get("trade_futures", True),
             "trade_options": settings.get("trade_options", False),
+            "btc_lot_size": settings.get("btc_lot_size", settings.get("contract_quantity", 1)),
+            "eth_lot_size": settings.get("eth_lot_size", settings.get("contract_quantity", 1)),
             "contract_quantity": settings.get("contract_quantity", 1),
             "profit_percentage": settings.get("profit_percentage", 75.0),
             "exit_half_position": settings.get("exit_half_position", False),
