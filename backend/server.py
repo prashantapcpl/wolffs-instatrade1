@@ -264,6 +264,21 @@ async def init_plan_config():
             "welcome": DEFAULT_WELCOME_CONFIG,
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+    
+    # Create unique index for alert deduplication locks
+    try:
+        await db.alert_locks.create_index([("key", 1), ("minute", 1)], unique=True)
+        logger.info("Alert locks index created")
+    except Exception as e:
+        logger.info(f"Alert locks index already exists or error: {e}")
+    
+    # Create TTL index to auto-delete old locks after 5 minutes
+    try:
+        await db.alert_locks.create_index("created_at", expireAfterSeconds=300)
+        logger.info("Alert locks TTL index created")
+    except Exception as e:
+        logger.info(f"Alert locks TTL index already exists or error: {e}")
+        })
 
 # ======================= UTILITIES =======================
 
