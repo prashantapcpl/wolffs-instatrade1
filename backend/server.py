@@ -896,11 +896,25 @@ async def websocket_alerts(websocket: WebSocket):
 # ======================= WEBHOOK INFO =======================
 
 @api_router.get("/webhook/info")
-async def get_webhook_info():
+async def get_webhook_info(current_user: dict = Depends(get_current_user)):
     """Get webhook URL and format info for TradingView setup"""
     backend_url = os.environ.get('BACKEND_URL', os.environ.get('REACT_APP_BACKEND_URL', ''))
+    
+    # Get user's webhook ID for custom strategy
+    webhook_id = current_user.get("trading_settings", {}).get("webhook_id", "")
+    
     return {
-        "webhook_url": f"{backend_url}/api/webhook/tradingview",
+        "admin_webhook": {
+            "url": f"{backend_url}/api/webhook/tradingview",
+            "description": "WolffsInsta Alerts - goes to all subscribers",
+            "usage": "Use this for official WolffsInsta strategy alerts"
+        },
+        "user_webhook": {
+            "url": f"{backend_url}/api/webhook/user/{webhook_id}",
+            "description": "Your personal webhook - alerts go only to you",
+            "usage": "Use this for your custom TradingView strategies",
+            "webhook_id": webhook_id
+        },
         "format": {
             "symbol": "BTC or ETH",
             "action": "BUY or SELL",
