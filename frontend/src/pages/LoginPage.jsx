@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Zap, Lock, User, Phone } from 'lucide-react';
+import { Zap, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -17,12 +17,15 @@ export default function LoginPage() {
     // Login form state
     const [loginMobile, setLoginMobile] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
     
     // Register form state
     const [regName, setRegName] = useState('');
     const [regMobile, setRegMobile] = useState('');
     const [regPassword, setRegPassword] = useState('');
     const [regConfirmPassword, setRegConfirmPassword] = useState('');
+    const [showRegPassword, setShowRegPassword] = useState(false);
+    const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
