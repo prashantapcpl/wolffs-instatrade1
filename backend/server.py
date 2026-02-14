@@ -371,8 +371,16 @@ async def register(user_data: UserCreate):
         "password": hash_password(user_data.password),
         "name": user_data.name,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "is_admin": user_data.mobile == ADMIN_MOBILE,
         "delta_credentials": None,
         "delta_connected": False,
+        "subscription": {
+            "plan_type": None,  # Not selected yet
+            "status": "inactive",
+            "start_date": None,
+            "expiry_date": None,
+            "is_trial": False
+        },
         "trading_settings": {
             "instruments": ["BTC", "ETH"],
             "trade_futures": True,
@@ -380,11 +388,14 @@ async def register(user_data: UserCreate):
             "contract_quantity": 1,
             "profit_percentage": 75.0,
             "exit_half_position": False,
-            "subscriber_type": "wolffs_alerts",
+            "subscriber_type": None,
             "webhook_id": webhook_id
         }
     }
     await db.users.insert_one(user_doc)
+    
+    # Initialize plan config if needed
+    await init_plan_config()
     
     token = create_token(user_id)
     return {
@@ -393,7 +404,8 @@ async def register(user_data: UserCreate):
         "user": {
             "id": user_id,
             "mobile": user_data.mobile,
-            "name": user_data.name
+            "name": user_data.name,
+            "is_admin": user_doc["is_admin"]
         }
     }
 
