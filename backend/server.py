@@ -908,26 +908,26 @@ async def websocket_alerts(websocket: WebSocket):
 
 @api_router.get("/webhook/info")
 async def get_webhook_info(current_user: dict = Depends(get_current_user)):
-    """Get webhook URL and format info for TradingView setup"""
+    """Get webhook URLs based on user's subscriber type"""
     backend_url = os.environ.get('BACKEND_URL', os.environ.get('REACT_APP_BACKEND_URL', ''))
+    settings = current_user.get("trading_settings", {})
+    subscriber_type = settings.get("subscriber_type", "wolffs_alerts")
+    webhook_id = settings.get("webhook_id", "")
     
-    # Get user's webhook ID for custom strategy
-    webhook_id = current_user.get("trading_settings", {}).get("webhook_id", "")
+    if subscriber_type == "wolffs_alerts":
+        webhook_url = f"{backend_url}/api/webhook/tradingview"
+        webhook_note = "This is the WolffsInsta master webhook (managed by admin)"
+    else:
+        webhook_url = f"{backend_url}/api/webhook/user/{webhook_id}"
+        webhook_note = "This is your personal webhook for custom strategies"
     
     return {
-        "admin_webhook": {
-            "url": f"{backend_url}/api/webhook/tradingview",
-            "description": "WolffsInsta Alerts - goes to all subscribers",
-            "usage": "Use this for official WolffsInsta strategy alerts"
-        },
-        "user_webhook": {
-            "url": f"{backend_url}/api/webhook/user/{webhook_id}",
-            "description": "Your personal webhook - alerts go only to you",
-            "usage": "Use this for your custom TradingView strategies",
-            "webhook_id": webhook_id
-        },
+        "subscriber_type": subscriber_type,
+        "webhook_url": webhook_url,
+        "webhook_note": webhook_note,
+        "webhook_id": webhook_id if subscriber_type == "custom_strategy" else None,
         "format": {
-            "symbol": "BTC or ETH",
+            "symbol": "BTCUSD or ETHUSD",
             "action": "BUY or SELL",
             "price": "optional - current price",
             "message": "optional - custom message"
@@ -936,7 +936,7 @@ async def get_webhook_info(current_user: dict = Depends(get_current_user)):
             "symbol": "BTCUSD",
             "action": "BUY",
             "price": 95000,
-            "message": "Long signal from strategy"
+            "message": "Long signal"
         }
     }
 
