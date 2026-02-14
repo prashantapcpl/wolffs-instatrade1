@@ -224,7 +224,7 @@ export default function SubscriptionPage() {
                             <Zap className="w-5 h-5 text-black" />
                         </div>
                         <h1 className="logo-text text-xl text-white uppercase">
-                            Wolffs Insta AutoTrade
+                            WolffsInsta Autotrade
                         </h1>
                     </div>
                     <div className="flex items-center gap-3">
