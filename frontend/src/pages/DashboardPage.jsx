@@ -269,13 +269,13 @@ export default function DashboardPage() {
 
             {/* Header */}
             <header className="border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-40">
-                <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+                <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-neon-green rounded-md flex items-center justify-center">
                             <Zap className="w-5 h-5 text-black" />
                         </div>
                         <h1 className="logo-text text-xl text-white uppercase hidden sm:block">
-                            Wolffs AutoTrade
+                            WolffsInsta Autotrade
                         </h1>
                         {/* Live indicator */}
                         <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${wsConnected ? 'bg-neon-green-dim text-neon-green' : 'bg-neon-red-dim text-neon-red'}`}>
@@ -284,7 +284,28 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
+                    {/* User Info - Center */}
+                    <div className="hidden md:flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-2 text-gray-400">
+                            <User className="w-3.5 h-3.5" />
+                            <span className="text-white font-medium">{user?.name || 'User'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-400">
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>{user?.mobile}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs bg-neon-green/10 text-neon-green border-neon-green/30">
+                                {getPlanDisplayName(user?.subscription?.plan_type)}
+                            </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-400">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>Exp: {formatExpiryDate(user?.subscription?.expiry_date)}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
                         {user?.is_admin && (
                             <Button
                                 variant="outline"
