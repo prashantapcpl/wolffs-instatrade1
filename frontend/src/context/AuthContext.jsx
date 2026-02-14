@@ -55,11 +55,15 @@ export const AuthProvider = ({ children }) => {
             mobile,
             password
         });
-        const { token: newToken, user: userData } = response.data;
+        const { token: newToken } = response.data;
         localStorage.setItem('token', newToken);
         axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         setToken(newToken);
-        setUser(userData);
+        
+        // Fetch full user data including subscription
+        const userResponse = await axios.get(`${API_URL}/api/auth/me`);
+        setUser(userResponse.data);
+        
         return response.data;
     };
 
@@ -69,11 +73,15 @@ export const AuthProvider = ({ children }) => {
             password,
             name
         });
-        const { token: newToken, user: userData } = response.data;
+        const { token: newToken } = response.data;
         localStorage.setItem('token', newToken);
         axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         setToken(newToken);
-        setUser(userData);
+        
+        // Fetch full user data including subscription
+        const userResponse = await axios.get(`${API_URL}/api/auth/me`);
+        setUser(userResponse.data);
+        
         return response.data;
     };
 
