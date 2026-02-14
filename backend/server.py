@@ -560,16 +560,31 @@ async def get_delta_products(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/settings")
 async def get_settings(current_user: dict = Depends(get_current_user)):
+    # Fetch fresh user data
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    settings = user.get("trading_settings", {})
+    
+    # Generate webhook_id if not exists
+    if not settings.get("webhook_id"):
+        webhook_id = str(uuid.uuid4())[:12]
+        settings["webhook_id"] = webhook_id
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"trading_settings.webhook_id": webhook_id}}
+        )
+    
     return {
-        "trading_settings": current_user.get("trading_settings", {
-            "instruments": ["BTC", "ETH"],
-            "trade_futures": True,
-            "trade_options": False,
-            "contract_quantity": 1,
-            "profit_percentage": 75.0,
-            "exit_half_position": False
-        }),
-        "has_delta_credentials": current_user.get("delta_credentials") is not None
+        "trading_settings": {
+            "instruments": settings.get("instruments", ["BTC", "ETH"]),
+            "trade_futures": settings.get("trade_futures", True),
+            "trade_options": settings.get("trade_options", False),
+            "contract_quantity": settings.get("contract_quantity", 1),
+            "profit_percentage": settings.get("profit_percentage", 75.0),
+            "exit_half_position": settings.get("exit_half_position", False),
+            "subscriber_type": settings.get("subscriber_type", "wolffs_alerts"),
+            "webhook_id": settings.get("webhook_id")
+        },
+        "has_delta_credentials": user.get("delta_credentials") is not None
     }
 
 @api_router.put("/settings")
