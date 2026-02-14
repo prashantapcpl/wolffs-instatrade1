@@ -622,77 +622,224 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                {/* Trading Settings */}
+                {/* Trading Settings - 4 Strategy Configuration */}
                 <Card className="card-dark">
                     <CardHeader>
                         <CardTitle className="text-lg font-headings text-white uppercase flex items-center gap-2">
                             <Activity className="w-5 h-5 text-neon-green" />
-                            Trading Settings
+                            Strategy Configuration
                         </CardTitle>
                         <CardDescription className="text-gray-500">
-                            Configure your trading preferences and risk management
+                            Configure up to 4 independent trading strategies - each signal can execute on multiple products
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Instruments */}
-                        <div className="space-y-3">
-                            <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
-                                Trading Instruments
-                            </Label>
-                            <div className="flex gap-3">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => toggleInstrument('BTC')}
-                                    data-testid="btc-toggle"
-                                    className={`${instruments.includes('BTC') 
-                                        ? 'bg-neon-green text-black border-neon-green' 
-                                        : 'btn-secondary'}`}
-                                >
-                                    <Bitcoin className="w-4 h-4 mr-2" />
-                                    BTC
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => toggleInstrument('ETH')}
-                                    data-testid="eth-toggle"
-                                    className={`${instruments.includes('ETH') 
-                                        ? 'bg-neon-green text-black border-neon-green' 
-                                        : 'btn-secondary'}`}
-                                >
-                                    ETH
-                                </Button>
+                        {/* BTC Strategies */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Bitcoin className="w-5 h-5 text-[#F7931A]" />
+                                <h3 className="text-white font-medium text-lg">BTC Strategies</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* BTC Futures */}
+                                <div className={`p-4 rounded-sm border ${btcFuturesEnabled ? 'bg-neon-green-dim border-neon-green/30' : 'bg-surface-highlight border-white/10'}`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <p className="text-white font-medium">BTC Futures</p>
+                                            <p className="text-gray-500 text-xs">Perpetual contracts</p>
+                                        </div>
+                                        <Switch
+                                            checked={btcFuturesEnabled}
+                                            onCheckedChange={setBtcFuturesEnabled}
+                                            data-testid="btc-futures-switch"
+                                        />
+                                    </div>
+                                    {btcFuturesEnabled && (
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">Lot Size</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={btcFuturesLotSize}
+                                                onChange={(e) => setBtcFuturesLotSize(parseInt(e.target.value) || 1)}
+                                                data-testid="btc-futures-lot-input"
+                                                className="input-dark"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* BTC Options */}
+                                <div className={`p-4 rounded-sm border ${btcOptionsEnabled ? 'bg-neon-green-dim border-neon-green/30' : 'bg-surface-highlight border-white/10'}`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <p className="text-white font-medium">BTC Options</p>
+                                            <p className="text-gray-500 text-xs">Call/Put contracts</p>
+                                        </div>
+                                        <Switch
+                                            checked={btcOptionsEnabled}
+                                            onCheckedChange={setBtcOptionsEnabled}
+                                            data-testid="btc-options-switch"
+                                        />
+                                    </div>
+                                    {btcOptionsEnabled && (
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">Lot Size</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={btcOptionsLotSize}
+                                                onChange={(e) => setBtcOptionsLotSize(parseInt(e.target.value) || 1)}
+                                                data-testid="btc-options-lot-input"
+                                                className="input-dark"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
                         <Separator className="bg-white/10" />
 
-                        {/* Trading Mode */}
-                        <div className="space-y-3">
-                            <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
-                                Trading Mode
-                            </Label>
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-surface-highlight rounded-sm">
-                                    <div>
-                                        <p className="text-white">Futures Trading</p>
-                                        <p className="text-gray-500 text-sm">Trade perpetual futures contracts</p>
+                        {/* ETH Strategies */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded-full bg-[#627EEA] flex items-center justify-center text-white text-xs font-bold">Ξ</div>
+                                <h3 className="text-white font-medium text-lg">ETH Strategies</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* ETH Futures */}
+                                <div className={`p-4 rounded-sm border ${ethFuturesEnabled ? 'bg-neon-green-dim border-neon-green/30' : 'bg-surface-highlight border-white/10'}`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <p className="text-white font-medium">ETH Futures</p>
+                                            <p className="text-gray-500 text-xs">Perpetual contracts</p>
+                                        </div>
+                                        <Switch
+                                            checked={ethFuturesEnabled}
+                                            onCheckedChange={setEthFuturesEnabled}
+                                            data-testid="eth-futures-switch"
+                                        />
                                     </div>
-                                    <Switch
-                                        checked={tradeFutures}
-                                        onCheckedChange={setTradeFutures}
-                                        data-testid="futures-switch"
-                                    />
+                                    {ethFuturesEnabled && (
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">Lot Size</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={ethFuturesLotSize}
+                                                onChange={(e) => setEthFuturesLotSize(parseInt(e.target.value) || 1)}
+                                                data-testid="eth-futures-lot-input"
+                                                className="input-dark"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-surface-highlight rounded-sm opacity-50">
+                                
+                                {/* ETH Options */}
+                                <div className={`p-4 rounded-sm border ${ethOptionsEnabled ? 'bg-neon-green-dim border-neon-green/30' : 'bg-surface-highlight border-white/10'}`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <p className="text-white font-medium">ETH Options</p>
+                                            <p className="text-gray-500 text-xs">Call/Put contracts</p>
+                                        </div>
+                                        <Switch
+                                            checked={ethOptionsEnabled}
+                                            onCheckedChange={setEthOptionsEnabled}
+                                            data-testid="eth-options-switch"
+                                        />
+                                    </div>
+                                    {ethOptionsEnabled && (
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">Lot Size</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={ethOptionsLotSize}
+                                                onChange={(e) => setEthOptionsLotSize(parseInt(e.target.value) || 1)}
+                                                data-testid="eth-options-lot-input"
+                                                className="input-dark"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Options Settings - shown when any options are enabled */}
+                        {(btcOptionsEnabled || ethOptionsEnabled) && (
+                            <>
+                                <Separator className="bg-white/10" />
+                                <div className="space-y-4">
+                                    <h3 className="text-white font-medium">Options Settings</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">Strike Selection</Label>
+                                            <div className="flex gap-2">
+                                                {['atm', 'otm_1', 'otm_2'].map((strike) => (
+                                                    <Button
+                                                        key={strike}
+                                                        variant="outline"
+                                                        onClick={() => setOptionsStrikeSelection(strike)}
+                                                        className={`flex-1 ${optionsStrikeSelection === strike 
+                                                            ? 'bg-neon-green text-black border-neon-green' 
+                                                            : 'btn-secondary'}`}
+                                                    >
+                                                        {strike === 'atm' ? 'ATM' : strike === 'otm_1' ? '1 OTM' : '2 OTM'}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">Expiry Preference</Label>
+                                            <div className="flex gap-2">
+                                                {['weekly', 'monthly'].map((exp) => (
+                                                    <Button
+                                                        key={exp}
+                                                        variant="outline"
+                                                        onClick={() => setOptionsExpiry(exp)}
+                                                        className={`flex-1 ${optionsExpiry === exp 
+                                                            ? 'bg-neon-green text-black border-neon-green' 
+                                                            : 'btn-secondary'}`}
+                                                    >
+                                                        {exp.charAt(0).toUpperCase() + exp.slice(1)}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <Separator className="bg-white/10" />
+
+                        {/* Profit Settings */}
+                        <div className="space-y-4">
+                            <h3 className="text-white font-medium">Profit Management</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-gray-400 text-xs">Profit Target (%)</Label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        max="500"
+                                        value={profitPercentage}
+                                        onChange={(e) => setProfitPercentage(parseInt(e.target.value) || 75)}
+                                        data-testid="profit-input"
+                                        className="input-dark"
+                                    />
+                                    <p className="text-gray-500 text-xs">Auto book profit at this %</p>
+                                </div>
+                                <div className="flex items-center justify-between p-3 bg-surface-highlight rounded-sm h-fit">
                                     <div>
-                                        <p className="text-white">Options Trading</p>
-                                        <p className="text-gray-500 text-sm">Coming in Phase 1B</p>
+                                        <p className="text-white">Exit Half Position</p>
+                                        <p className="text-gray-500 text-xs">Book 50% at target</p>
                                     </div>
                                     <Switch
-                                        checked={tradeOptions}
-                                        onCheckedChange={setTradeOptions}
-                                        disabled
-                                        data-testid="options-switch"
+                                        checked={exitHalfPosition}
+                                        onCheckedChange={setExitHalfPosition}
+                                        data-testid="exit-half-switch"
                                     />
                                 </div>
                             </div>
