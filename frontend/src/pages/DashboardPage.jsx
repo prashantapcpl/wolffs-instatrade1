@@ -294,6 +294,18 @@ export default function DashboardPage() {
                     </div>
                     
                     <div className="flex items-center gap-3">
+                        {user?.is_admin && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate('/admin')}
+                                data-testid="admin-panel-btn"
+                                className="text-neon-green border-neon-green/50 hover:bg-neon-green/10 hidden sm:flex"
+                            >
+                                <Shield className="w-4 h-4 mr-2" />
+                                Admin
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="icon"
