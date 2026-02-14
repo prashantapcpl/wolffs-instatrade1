@@ -182,12 +182,19 @@ export default function LoginPage() {
                                                 <Input
                                                     id="login-password"
                                                     data-testid="login-password-input"
-                                                    type="password"
+                                                    type={showLoginPassword ? "text" : "password"}
                                                     placeholder="Enter password"
                                                     value={loginPassword}
                                                     onChange={(e) => setLoginPassword(e.target.value)}
-                                                    className="input-dark pl-10"
+                                                    className="input-dark pl-10 pr-10"
                                                 />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                                >
+                                                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
                                             </div>
                                         </div>
                                         <Button
