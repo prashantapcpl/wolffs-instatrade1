@@ -70,6 +70,8 @@ export default function SettingsPage() {
             setInstruments(settings.instruments || ['BTC', 'ETH']);
             setTradeFutures(settings.trade_futures !== false);
             setTradeOptions(settings.trade_options || false);
+            setBtcLotSize(settings.btc_lot_size || settings.contract_quantity || 1);
+            setEthLotSize(settings.eth_lot_size || settings.contract_quantity || 1);
             setContractQuantity(settings.contract_quantity || 1);
             setProfitPercentage(settings.profit_percentage || 75);
             setExitHalfPosition(settings.exit_half_position || false);
