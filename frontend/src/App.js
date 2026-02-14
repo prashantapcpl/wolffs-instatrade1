@@ -38,16 +38,19 @@ const SubscriptionRequiredRoute = ({ children }) => {
     
     const subscription = user?.subscription || {};
     const hasActiveSubscription = subscription.status === 'active' || subscription.status === 'trial';
+    const hasPlanType = !!subscription.plan_type;
     
     // Check if expired
     if (subscription.expiry_date) {
         const expiry = new Date(subscription.expiry_date);
-        if (expiry < new Date()) {
+        const now = new Date();
+        if (expiry < now) {
             return <Navigate to="/subscription" replace />;
         }
     }
     
-    if (!hasActiveSubscription) {
+    // Must have both active status and a selected plan
+    if (!hasActiveSubscription || !hasPlanType) {
         return <Navigate to="/subscription" replace />;
     }
     
