@@ -647,6 +647,76 @@ async def admin_update_plans(plans: dict, admin: dict = Depends(verify_admin)):
     )
     return {"message": "Plans updated successfully"}
 
+@api_router.get("/admin/welcome")
+async def admin_get_welcome(admin: dict = Depends(verify_admin)):
+    """Get welcome message configuration (admin only)"""
+    welcome = await get_welcome_config()
+    return {"welcome": welcome}
+
+@api_router.put("/admin/welcome")
+async def admin_update_welcome(welcome: dict, admin: dict = Depends(verify_admin)):
+    """Update welcome message configuration (admin only)"""
+    await db.config.update_one(
+        {"type": "welcome"},
+        {"$set": {"welcome": welcome, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Welcome message updated successfully"}
+
+@api_router.delete("/admin/user/{user_id}")
+async def admin_delete_user(user_id: str, admin: dict = Depends(verify_admin)):
+    """Delete a user (admin only)"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.get("is_admin"):
+        raise HTTPException(status_code=400, detail="Cannot delete admin user")
+    
+    # Delete user's data
+    await db.users.delete_one({"id": user_id})
+    await db.alerts.delete_many({"source_id": user_id})
+    await db.trades.delete_many({"user_id": user_id})
+    
+    return {"message": "User deleted successfully"}
+
+# ======================= USER PASSWORD CHANGE =======================
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.post("/auth/change-password")
+async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    """Change user password"""
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify current password
+    if not verify_password(password_data.current_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Validate new password
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    
+    # Update password
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"password": hash_password(password_data.new_password)}}
+    )
+    
+    return {"message": "Password changed successfully"}
+
+# ======================= PUBLIC CONFIG ROUTES =======================
+
+@api_router.get("/config/welcome")
+async def get_welcome_message():
+    """Get welcome message (public)"""
+    welcome = await get_welcome_config()
+    return {"welcome": welcome}
+
 # ======================= DELTA EXCHANGE ROUTES =======================
 
 @api_router.post("/delta/connect")
