@@ -12,7 +12,8 @@ import { Separator } from '../components/ui/separator';
 import { 
     ArrowLeft, Zap, Link2, Unlink, Save, 
     ExternalLink, PlayCircle, Eye, EyeOff,
-    Bitcoin, Activity
+    Bitcoin, Activity, Copy, Check, Trash2, RefreshCw,
+    Users, User
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ export default function SettingsPage() {
     const [region, setRegion] = useState('global');
     const [showSecret, setShowSecret] = useState(false);
     const [connecting, setConnecting] = useState(false);
+    const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
     
     // Trading settings
     const [instruments, setInstruments] = useState(['BTC', 'ETH']);
@@ -37,11 +39,14 @@ export default function SettingsPage() {
     const [contractQuantity, setContractQuantity] = useState(1);
     const [profitPercentage, setProfitPercentage] = useState(75);
     const [exitHalfPosition, setExitHalfPosition] = useState(false);
+    const [subscriberType, setSubscriberType] = useState('wolffs_alerts');
+    const [webhookId, setWebhookId] = useState('');
     const [savingSettings, setSavingSettings] = useState(false);
     
     // Status
     const [deltaStatus, setDeltaStatus] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         fetchSettings();
@@ -58,6 +63,9 @@ export default function SettingsPage() {
             setContractQuantity(settings.contract_quantity || 1);
             setProfitPercentage(settings.profit_percentage || 75);
             setExitHalfPosition(settings.exit_half_position || false);
+            setSubscriberType(settings.subscriber_type || 'wolffs_alerts');
+            setWebhookId(settings.webhook_id || '');
+            setHasSavedCredentials(response.data.has_delta_credentials || false);
         } catch (error) {
             console.error('Failed to fetch settings:', error);
         } finally {
@@ -91,6 +99,7 @@ export default function SettingsPage() {
             toast.success('Delta Exchange connected successfully!');
             setApiKey('');
             setApiSecret('');
+            setHasSavedCredentials(true);
             await fetchDeltaStatus();
             await refreshUser();
         } catch (error) {
@@ -100,14 +109,43 @@ export default function SettingsPage() {
         }
     };
 
+    const handleReconnect = async () => {
+        setConnecting(true);
+        try {
+            await axios.post(`${API_URL}/api/delta/reconnect`);
+            toast.success('Reconnected successfully!');
+            await fetchDeltaStatus();
+            await refreshUser();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Reconnection failed');
+        } finally {
+            setConnecting(false);
+        }
+    };
+
     const handleDisconnect = async () => {
         try {
             await axios.delete(`${API_URL}/api/delta/disconnect`);
-            toast.success('Delta Exchange disconnected');
-            setDeltaStatus(null);
+            toast.success('Delta Exchange disconnected (credentials saved)');
+            await fetchDeltaStatus();
             await refreshUser();
         } catch (error) {
             toast.error('Failed to disconnect');
+        }
+    };
+
+    const handleClearCredentials = async () => {
+        if (!confirm('Are you sure you want to remove saved credentials? You will need to enter them again.')) {
+            return;
+        }
+        try {
+            await axios.delete(`${API_URL}/api/delta/clear-credentials`);
+            toast.success('Credentials removed');
+            setHasSavedCredentials(false);
+            await fetchDeltaStatus();
+            await refreshUser();
+        } catch (error) {
+            toast.error('Failed to clear credentials');
         }
     };
 
@@ -120,7 +158,9 @@ export default function SettingsPage() {
                 trade_options: tradeOptions,
                 contract_quantity: contractQuantity,
                 profit_percentage: profitPercentage,
-                exit_half_position: exitHalfPosition
+                exit_half_position: exitHalfPosition,
+                subscriber_type: subscriberType,
+                webhook_id: webhookId
             });
             toast.success('Settings saved successfully!');
             await refreshUser();
@@ -139,6 +179,21 @@ export default function SettingsPage() {
         } else {
             setInstruments([...instruments, inst]);
         }
+    };
+
+    const getWebhookUrl = () => {
+        if (subscriberType === 'wolffs_alerts') {
+            return `${API_URL}/api/webhook/tradingview`;
+        } else {
+            return `${API_URL}/api/webhook/user/${webhookId}`;
+        }
+    };
+
+    const copyWebhook = () => {
+        navigator.clipboard.writeText(getWebhookUrl());
+        setCopied(true);
+        toast.success('Webhook URL copied!');
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
@@ -168,6 +223,61 @@ export default function SettingsPage() {
 
             {/* Main Content */}
             <main className="max-w-[1200px] mx-auto p-4 md:p-6 space-y-6">
+                
+                {/* Subscriber Type Selection */}
+                <Card className="card-dark">
+                    <CardHeader>
+                        <CardTitle className="text-lg font-headings text-white uppercase flex items-center gap-2">
+                            <Users className="w-5 h-5 text-neon-green" />
+                            Subscription Type
+                        </CardTitle>
+                        <CardDescription className="text-gray-500">
+                            Choose how you want to receive trading alerts
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div 
+                                onClick={() => setSubscriberType('wolffs_alerts')}
+                                className={`p-4 rounded-sm border cursor-pointer transition-all ${
+                                    subscriberType === 'wolffs_alerts' 
+                                        ? 'border-neon-green bg-neon-green-dim' 
+                                        : 'border-white/10 hover:border-white/20'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Users className={`w-5 h-5 ${subscriberType === 'wolffs_alerts' ? 'text-neon-green' : 'text-gray-400'}`} />
+                                    <span className={`font-medium ${subscriberType === 'wolffs_alerts' ? 'text-neon-green' : 'text-white'}`}>
+                                        WolffsInsta Alerts
+                                    </span>
+                                </div>
+                                <p className="text-gray-500 text-sm">
+                                    Receive alerts from WolffsInsta strategies. Trades are executed automatically based on admin signals.
+                                </p>
+                            </div>
+                            
+                            <div 
+                                onClick={() => setSubscriberType('custom_strategy')}
+                                className={`p-4 rounded-sm border cursor-pointer transition-all ${
+                                    subscriberType === 'custom_strategy' 
+                                        ? 'border-neon-green bg-neon-green-dim' 
+                                        : 'border-white/10 hover:border-white/20'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3 mb-2">
+                                    <User className={`w-5 h-5 ${subscriberType === 'custom_strategy' ? 'text-neon-green' : 'text-gray-400'}`} />
+                                    <span className={`font-medium ${subscriberType === 'custom_strategy' ? 'text-neon-green' : 'text-white'}`}>
+                                        Custom Strategy
+                                    </span>
+                                </div>
+                                <p className="text-gray-500 text-sm">
+                                    Use your own TradingView/Chartink strategies. You get a unique webhook URL for your signals.
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Delta Exchange Connection */}
                 <Card className="card-dark">
                     <CardHeader>
@@ -196,8 +306,8 @@ export default function SettingsPage() {
                                             <p className="text-gray-400 text-sm mt-1">
                                                 Balance: ${parseFloat(deltaStatus.balance || 0).toFixed(2)}
                                             </p>
-                                            <p className="text-gray-500 text-xs mt-2">
-                                                Region: {deltaStatus?.region || 'India'} | Mode: {deltaStatus?.is_testnet ? 'Testnet' : 'Production'}
+                                            <p className="text-gray-500 text-xs mt-1">
+                                                Open Positions: {deltaStatus.positions_count || 0}
                                             </p>
                                         </div>
                                         <Button
@@ -223,6 +333,38 @@ export default function SettingsPage() {
                                         • Keys are encrypted and stored securely<br/>
                                         • Disconnect removes keys from our system
                                     </p>
+                                </div>
+                            </div>
+                        ) : hasSavedCredentials ? (
+                            <div className="space-y-4">
+                                <div className="p-4 bg-surface-highlight rounded-sm border border-white/10">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-white font-medium">Saved Credentials Found</p>
+                                            <p className="text-gray-500 text-sm mt-1">
+                                                Your API keys are saved. Click reconnect to restore connection.
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                onClick={handleReconnect}
+                                                data-testid="reconnect-btn"
+                                                disabled={connecting}
+                                                className="btn-primary"
+                                            >
+                                                <RefreshCw className={`w-4 h-4 mr-2 ${connecting ? 'animate-spin' : ''}`} />
+                                                {connecting ? 'Reconnecting...' : 'Reconnect'}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={handleClearCredentials}
+                                                data-testid="clear-credentials-btn"
+                                                className="btn-secondary"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -468,7 +610,7 @@ export default function SettingsPage() {
                                     className="input-dark"
                                 />
                                 <p className="text-gray-500 text-xs">
-                                    Auto book profit at this percentage
+                                    Auto book profit at this percentage (Phase 1B)
                                 </p>
                             </div>
                         </div>
@@ -479,7 +621,7 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between p-3 bg-surface-highlight rounded-sm">
                             <div>
                                 <p className="text-white">Exit Half Position</p>
-                                <p className="text-gray-500 text-sm">Book profit on half, let rest run</p>
+                                <p className="text-gray-500 text-sm">Book profit on half, let rest run (Phase 1B)</p>
                             </div>
                             <Switch
                                 checked={exitHalfPosition}
@@ -506,35 +648,63 @@ export default function SettingsPage() {
                     <CardHeader>
                         <CardTitle className="text-lg font-headings text-white uppercase flex items-center gap-2">
                             <ExternalLink className="w-5 h-5 text-neon-green" />
-                            TradingView Webhook Setup
+                            {subscriberType === 'wolffs_alerts' ? 'WolffsInsta Webhook' : 'Your Personal Webhook'}
                         </CardTitle>
                         <CardDescription className="text-gray-500">
-                            Use this webhook URL in your TradingView alerts
+                            {subscriberType === 'wolffs_alerts' 
+                                ? 'This webhook is managed by WolffsInsta admin. Alerts are sent automatically.'
+                                : 'Use this unique webhook URL in your TradingView/Chartink strategies'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="p-4 bg-obsidian rounded-sm border border-white/10">
-                            <Label className="text-gray-400 text-xs uppercase mb-2 block">Webhook URL</Label>
-                            <code className="text-neon-green font-mono text-sm break-all">
-                                {API_URL}/api/webhook/tradingview
-                            </code>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex-1 overflow-hidden">
+                                    <Label className="text-gray-400 text-xs uppercase mb-2 block">Webhook URL</Label>
+                                    <code className="text-neon-green font-mono text-sm break-all">
+                                        {getWebhookUrl()}
+                                    </code>
+                                </div>
+                                {subscriberType === 'custom_strategy' && (
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={copyWebhook}
+                                        className="flex-shrink-0 btn-secondary"
+                                    >
+                                        {copied ? <Check className="w-4 h-4 text-neon-green" /> : <Copy className="w-4 h-4" />}
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                        
-                        <div className="p-4 bg-obsidian rounded-sm border border-white/10">
-                            <Label className="text-gray-400 text-xs uppercase mb-2 block">Alert Message Format (JSON)</Label>
-                            <pre className="text-gray-300 font-mono text-xs overflow-x-auto">
+
+                        {subscriberType === 'custom_strategy' && (
+                            <>
+                                <div className="p-4 bg-obsidian rounded-sm border border-white/10">
+                                    <Label className="text-gray-400 text-xs uppercase mb-2 block">Alert Message Format (JSON)</Label>
+                                    <pre className="text-gray-300 font-mono text-xs overflow-x-auto">
 {`{
   "symbol": "BTCUSD",
   "action": "BUY",
   "price": {{close}},
   "message": "Long signal"
 }`}
-                            </pre>
-                        </div>
+                                    </pre>
+                                </div>
 
-                        <p className="text-gray-500 text-sm">
-                            <strong className="text-gray-300">Tip:</strong> Use <code className="text-neon-green">{"{{close}}"}</code> to include the candle close price in your alert.
-                        </p>
+                                <p className="text-gray-500 text-sm">
+                                    <strong className="text-gray-300">Tip:</strong> Use <code className="text-neon-green">{"{{close}}"}</code> to include the candle close price in your alert.
+                                </p>
+                            </>
+                        )}
+
+                        {subscriberType === 'wolffs_alerts' && (
+                            <div className="p-3 bg-surface-highlight rounded-sm border border-white/10">
+                                <p className="text-gray-400 text-sm">
+                                    <strong className="text-white">Note:</strong> As a WolffsInsta subscriber, you will automatically receive trading signals from our strategies. No webhook setup needed from your side.
+                                </p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
