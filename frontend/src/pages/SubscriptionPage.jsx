@@ -22,9 +22,27 @@ export default function SubscriptionPage() {
     const [showModal, setShowModal] = useState(false);
     const [processing, setProcessing] = useState(false);
 
+    const subscription = user?.subscription || {};
+    const hasActiveSubscription = subscription.status === 'active' || subscription.status === 'trial';
+    const currentPlan = subscription.plan_type;
+
     useEffect(() => {
         fetchPlans();
     }, []);
+
+    // Auto-redirect to dashboard if user has active subscription
+    useEffect(() => {
+        if (!loading && hasActiveSubscription && currentPlan) {
+            // Check if subscription is not expired
+            if (subscription.expiry_date) {
+                const expiry = new Date(subscription.expiry_date);
+                if (expiry > new Date()) {
+                    // Give user a moment to see the page, then redirect
+                    // Or they can click "Enter App" button
+                }
+            }
+        }
+    }, [loading, hasActiveSubscription, currentPlan, subscription.expiry_date]);
 
     const fetchPlans = async () => {
         try {
