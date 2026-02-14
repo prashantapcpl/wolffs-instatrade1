@@ -379,6 +379,15 @@ export default function SettingsPage() {
                                         • Disconnect removes keys from our system
                                     </p>
                                 </div>
+                                
+                                {/* Whitelisted IP Reference */}
+                                <div className="p-3 bg-obsidian rounded-sm border border-white/10">
+                                    <p className="text-gray-400 text-sm">
+                                        <strong className="text-white">Whitelisted IP:</strong>{' '}
+                                        <code className="text-neon-green font-mono">104.198.214.223</code>
+                                        <span className="text-gray-500 ml-2">(static - never changes)</span>
+                                    </p>
+                                </div>
                             </div>
                         ) : hasSavedCredentials ? (
                             <div className="space-y-4">
