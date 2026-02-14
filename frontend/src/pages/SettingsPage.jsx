@@ -484,8 +484,11 @@ export default function SettingsPage() {
                                                     <Copy className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                            <p className="text-gray-500 text-xs mt-2">
-                                                This is a permanent static IP. Add it once during API key creation.
+                                            <p className="text-yellow-500 text-xs mt-2">
+                                                <strong>Preview Environment IP:</strong> 104.198.214.223
+                                            </p>
+                                            <p className="text-gray-500 text-xs mt-1">
+                                                <strong>Production Deployment:</strong> Contact support@emergent.sh for production IP if deploying to production.
                                             </p>
                                         </div>
                                     </div>
