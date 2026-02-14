@@ -305,8 +305,10 @@ export default function SubscriptionPage() {
                                         : 'btn-secondary'}
                                 >
                                     {currentPlan === 'wolffs_alerts' && hasActiveSubscription 
-                                        ? 'Enter' 
-                                        : 'Select'}
+                                        ? 'Enter App' 
+                                        : hasActiveSubscription 
+                                            ? 'Subscribed' 
+                                            : 'Select'}
                                     <ArrowRight className="w-4 h-4 ml-1" />
                                 </Button>
                             </div>
@@ -359,8 +361,10 @@ export default function SubscriptionPage() {
                                         : 'btn-secondary'}
                                 >
                                     {currentPlan === 'custom_strategy' && hasActiveSubscription 
-                                        ? 'Enter' 
-                                        : 'Select'}
+                                        ? 'Enter App' 
+                                        : hasActiveSubscription 
+                                            ? 'Subscribed' 
+                                            : 'Select'}
                                     <ArrowRight className="w-4 h-4 ml-1" />
                                 </Button>
                             </div>
