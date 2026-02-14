@@ -1105,6 +1105,7 @@ async def execute_trades_for_alert(alert: dict):
     action = alert["action"]
     source = alert.get("source", "wolffs_alerts")
     source_id = alert.get("source_id", "admin")
+    alert_strategy_type = alert.get("strategy_type", "both")  # NEW: Get strategy type from alert
     
     # Clean up symbol - remove .P suffix and other variations
     # BTCUSD.P -> BTC, ETHUSD.P -> ETH
