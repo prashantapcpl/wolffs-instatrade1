@@ -25,6 +25,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
+    const [welcomeConfig, setWelcomeConfig] = useState(null);
     const [wsConnected, setWsConnected] = useState(false);
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
