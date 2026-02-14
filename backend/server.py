@@ -1100,9 +1100,10 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
     alert_id = str(uuid.uuid4())
     alert_record = {
         "id": alert_id,
-        "symbol": symbol,
+        "symbol": symbol,  # Normalized symbol (BTCUSD or ETHUSD)
+        "instrument": instrument,  # BTC or ETH
         "action": action,
-        "strategy_type": strategy_type,  # NEW: which product type to execute on
+        "strategy_type": strategy_type,  # which product type to execute on
         "price": float(price) if price and str(price).replace('.', '').replace('-', '').isdigit() else None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "message": message,
