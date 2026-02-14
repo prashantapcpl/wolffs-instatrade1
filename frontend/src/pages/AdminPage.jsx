@@ -8,9 +8,10 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { Textarea } from '../components/ui/textarea';
 import { 
     ArrowLeft, Zap, Users, Settings, Save, 
-    Plus, Clock, Crown, Search, RefreshCw
+    Plus, Clock, Crown, Search, RefreshCw, Trash2, MessageSquare, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
