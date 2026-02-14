@@ -10,130 +10,1186 @@
         - Logic to place futures orders based on BUY/SELL signals.
         - A subscription system with two tiers: WolffsInsta Alerts (signals from an admin) and Custom Strategy (signals from a user's unique webhook).
         - An admin panel to manage users and subscriptions.
-    - **1B (Upcoming):**
+    - **1B (In Progress):**
         - Implement options trading logic (OTM strike selection, expiry, reversals, profit booking, partial exits).
+        - Allow multiple strategies per instrument (e.g., one for futures, one for options).
     - **1C (Upcoming):**
         - Generate and download PDF performance reports.
 - **Phase 2 (Future):**
     - Integrate with stockbrokers (Zerodha, AngelOne, Fyers) for equity and MCX trading.
 - **General:**
-    - UI theme should be dark, similar to a reference website ().
+    - UI theme should be dark.
     - App must provide real-time alert notifications within a second.
-    - Support for mobile OTP authentication (deferred).
+    - Admin should have control over various UI text elements and user management.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application, Wolffs Insta AutoTrade, has been built, completing Phase 1A.
-- **Backend (FastAPI):** Features JWT authentication, a complete subscription system with admin/user roles, plan management, and trial periods. It integrates with the Delta Exchange API for fetching balances, positions, and executing futures trades. It supports dual-mode webhooks (a master admin webhook and unique user-specific webhooks) and broadcasts alerts in real-time via WebSockets.
-- **Frontend (React):** A dark-themed UI with pages for Login, Registration, Subscription, a Dashboard (displaying connection status and live alerts), Settings (for Delta Exchange connection and viewing subscription info), and an Admin panel.
+A full-stack application that has completed Phase 1A and made significant progress on Phase 1B.
+- **Backend (FastAPI):** Features JWT authentication, a subscription system, Delta Exchange integration, and real-time WebSocket alerts. The trading logic was recently overhauled to support four independent strategies (BTC/ETH Futures & Options) selectable via a  field in the webhook payload. It also includes admin controls for UI text and user management. **However, the backend is currently non-functional and crashes on startup.**
+- **Frontend (React):** A comprehensive dark-themed UI.
+    - **Login/Register:** Includes a password visibility toggle.
+    - **Dashboard:** Displays user subscription info in the header, shows separate Crypto and Stocks broker status panels, and has an Admin button for admins.
+    - **Settings:** Features a 4-strategy configuration UI, separate BTC/ETH lot sizes, a password change section, a prominent display of the static IP () for whitelisting, and a detailed guide for setting up TradingView webhooks.
+    - **Admin Panel:** Allows admins to delete users and customize plan descriptions and the welcome modal text.
 
 **Last working item**:
-- **Last item agent was working:** Implementing a comprehensive subscription and user management system. This included creating two subscriber types ('WolffsInsta Alerts' and 'Custom Strategy'), a subscription selection page for new users, a free trial mechanism, and an admin panel for user/plan management. The system also segregates webhook alerts based on the user's subscription type.
-- **Status:** USER VERIFICATION PENDING
-- **Agent Testing Done:** Y
-- **Which testing method agent to use?** Frontend testing agent should be used to test the complete user and admin flows:
-    1.  New user registration -> subscription selection -> trial activation -> dashboard access.
-    2.  Admin login -> access to admin panel -> ability to view and manage users.
+- **Last item agent was working:** The agent was performing a major bug-fixing pass on the core trading logic, addressing three critical user reports simultaneously:
+    1.  **Duplicate Trades:** Caused by simultaneous webhook calls bypassing the existing 30-second deduplication. The agent attempted to fix this by implementing a more robust locking mechanism using a new MongoDB collection ().
+    2.  **Incorrect Trade Execution:** A SELL signal was not reversing an existing BUY position. The agent added logic to fetch and close opposite positions before opening a new one.
+    3.  **Refresh Button Failure:** The agent identified this was due to a 520 backend error.
+- **Status:** BLOCKED
+- **Agent Testing Done:** N
+- **Which testing method agent to use?**
+    1.  **Main Agent Debugging:** The immediate priority is to fix the backend startup crash. The agent must check the supervisor logs (==> /var/log/supervisor/backend.err.log <==
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 7
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 6
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 5
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 4
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 3
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 2
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 1
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 0
+INFO:     connection closed
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [321]
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+INFO:     Stopping reloader process [46]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [656] using WatchFiles
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [46] using WatchFiles
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.208.161.194:35186 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39330 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35186 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:52096 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.139.130:43736 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:44576 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51464 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:44576 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:36432 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51542 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51542 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:58798 - "GET /api/alerts/recent?hours=1 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46588 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46588 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:57794 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:57794 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42780 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42780 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:57794 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42780 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40718 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:51962 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:51962 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:59776 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55306 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55306 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51394 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55306 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39464 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:54358 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.169.194:55072 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39464 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48308 - "PUT /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:47654 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.169.194:39072 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:52770 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:39072 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:43850 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:43840 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:52770 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:34424 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:48338 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:34416 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.169.194:44876 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:50042 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:34254 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53552 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:34254 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:50054 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:50054 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:54174 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59204 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59204 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:54174 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59216 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59216 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:45978 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:56978 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:56968 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:45978 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "POST /api/subscription/start-trial?plan_type=wolffs_alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42246 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42262 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42262 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40176 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:43760 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40176 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:43760 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56864 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56864 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/admin/users HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/admin/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/admin/users HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/admin/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36870 - "PUT /api/admin/user/668ef1b7-abed-4256-8101-4fb028058f13/extend?days=7 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37466 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37478 - "GET /api/admin/users HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36870 - "GET /api/admin/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58716 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58716 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58716 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36478 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58724 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58724 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36478 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36478 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:47744 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:47744 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:49466 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46674 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46674 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:49466 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54898 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54908 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51946 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51946 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54908 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54898 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53108 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54294 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53108 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54294 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53124 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53124 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:55966 - "GET /api/delta/status HTTP/1.1" 401 Unauthorized
+INFO:     10.208.169.194:41660 - "GET /api/alerts HTTP/1.1" 401 Unauthorized
+INFO:     10.208.139.130:51178 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:50292 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51178 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51178 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:51442 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33862 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33726 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:42010 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33722 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48898 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.169.194:42994 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48898 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48898 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53558 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53546 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53546 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55178 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:39102 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53546 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:47398 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:46596 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:43350 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46568 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:58040 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51892 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:40826 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:40832 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.169.194:45160 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53754 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:57378 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39020 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:50356 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:50346 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39020 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:44496 - "GET /api/alerts/recent?hours=2 HTTP/1.1" 200 OK) to identify the syntax or runtime error in . The error is very likely related to the new deduplication lock or position reversal logic.
+    2.  **Backend Testing (curl):** Once the backend is running, use  to test the webhook endpoint with various payloads (simultaneous requests, BUY then SELL signals) to validate the new deduplication and position reversal logic.
+    3.  **Frontend Testing Agent:** After backend stabilization, use the testing agent to perform a full E2E test of the trading flow.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1 (P0):** User verification for the new subscription system. The entire flow, including admin and regular user paths, needs to be tested by the user.
+- **Issue 1 (P0): Backend is crashing on startup.**
+- **Issue 2 (P0): Duplicate trades are executed for simultaneous webhook calls.**
+- **Issue 3 (P0): Trade logic does not reverse positions correctly.**
+- **Issue 4 (P1): BTC Options trading is not working.**
+- **Issue 5 (P1): Dashboard refresh button is not working.**
+- **Issue 6 (P2): Alerts sometimes do not refresh automatically via WebSocket.**
+
+**Issues Detail:**
+- **Issue 1: Backend is crashing on startup.**
+    - **Attempted fixes:** The agent attempted to restart the backend service, which resulted in a 520 error, confirming a fatal startup error. The agent did not get to view the logs to find the cause.
+    - **Next debug checklist:**
+        1.  Execute INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 7
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 6
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 5
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 4
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 3
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 2
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 1
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 0
+INFO:     connection closed
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [321]
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+INFO:     Stopping reloader process [46]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [656] using WatchFiles
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [46] using WatchFiles
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}' and INFO:     10.208.161.194:35186 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39330 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35186 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:52096 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.139.130:43736 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:44576 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51464 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:44576 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.169.194:36432 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51542 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51542 - "POST /api/webhook/tradingview HTTP/1.1" 200 OK
+INFO:     10.208.161.194:58798 - "GET /api/alerts/recent?hours=1 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46588 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46588 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.169.194:57306 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46582 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:57794 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:57794 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42780 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42780 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:57794 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:35918 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42780 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40718 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:51962 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:51962 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:59776 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55306 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55306 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51394 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53186 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55306 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39464 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:54358 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.169.194:55072 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39464 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48308 - "PUT /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:47654 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.169.194:39072 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:52770 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:39072 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:43850 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:43840 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:52770 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:34424 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:48338 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:34416 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.169.194:44876 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:50042 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.169.194:34254 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53552 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:34254 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:50054 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:50054 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:54174 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59204 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59204 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:54174 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33718 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59216 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:59216 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:45978 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:56978 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:56968 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:45978 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37758 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "POST /api/subscription/start-trial?plan_type=wolffs_alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42246 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42262 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51502 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:42262 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40176 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:43760 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40176 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:43760 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56864 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56864 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/admin/users HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/admin/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:40196 - "GET /api/admin/users HTTP/1.1" 200 OK
+INFO:     10.208.161.194:56874 - "GET /api/admin/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36870 - "PUT /api/admin/user/668ef1b7-abed-4256-8101-4fb028058f13/extend?days=7 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37466 - "GET /api/admin/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:37478 - "GET /api/admin/users HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36870 - "GET /api/admin/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58716 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58716 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58716 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36478 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58724 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:58724 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36478 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:36478 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:47744 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:47744 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:49466 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46674 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46674 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:49466 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60738 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51448 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54898 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54908 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51946 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51946 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54908 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54898 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53108 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54294 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53108 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:54294 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53124 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:53124 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:55966 - "GET /api/delta/status HTTP/1.1" 401 Unauthorized
+INFO:     10.208.169.194:41660 - "GET /api/alerts HTTP/1.1" 401 Unauthorized
+INFO:     10.208.139.130:51178 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.208.169.194:50292 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51178 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:51178 - "GET /api/plans HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:51442 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33862 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:60068 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33726 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:42010 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:33722 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48898 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.169.194:42994 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48898 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:48898 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53558 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53546 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53546 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:55178 - "GET /api/config/welcome HTTP/1.1" 200 OK
+INFO:     10.208.169.194:39102 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53546 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:47398 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:46596 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:43350 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:46568 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.169.194:58040 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:51892 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:40826 - "GET /api/alerts HTTP/1.1" 200 OK
+INFO:     10.208.161.194:40832 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.169.194:45160 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:53754 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.161.194:57378 - "POST /api/webhook/user/dc2d1804-876 HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39020 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:50356 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.208.161.194:50346 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.139.130:39020 - "GET /api/delta/status HTTP/1.1" 200 OK
+INFO:     10.208.161.194:44496 - "GET /api/alerts/recent?hours=2 HTTP/1.1" 200 OK.
+        2.  Inspect  for syntax errors, particularly in the sections recently added for the deduplication lock (around line ) and the position reversal logic (around line ). Pay close attention to the  call for the  collection.
+    - **Why fix this issue and what will be achieved with the fix?** This is a total blocker. Fixing it will make the entire application functional again.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** backend
+- **Issue 2: Duplicate trades are executed for simultaneous webhook calls.**
+    - **Attempted fixes:** The agent added a locking mechanism using a  MongoDB collection with a TTL index to create a unique document for each incoming alert hash, preventing race conditions. This implementation likely caused the backend crash.
+    - **Next debug checklist:**
+        1.  After fixing the backend crash, verify the  collection is created with the correct TTL index.
+        2.  Send two identical webhook requests simultaneously using  and verify only one trade is executed and one alert is stored.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical bug that causes financial risk by executing unintended trades. Fixing it ensures trading integrity.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** backend
+- **Issue 3: Trade logic does not reverse positions correctly.**
+    - **Attempted fixes:** The agent added logic within  in  to fetch existing open positions for the opposite direction and close them before opening the new position.
+    - **Next debug checklist:**
+        1.  Verify the logic correctly calculates the size of the closing trade (e.g., if holding 4 BUY and a 4-lot SELL signal comes, it should place a SELL order of 8 lots).
+        2.  Test this by sending a BUY signal via , then a SELL signal, and checking the position on Delta Exchange (or mocked client response).
+    - **Why fix this issue and what will be achieved with the fix?** This ensures the trading strategy works as intended, preventing unintended accumulation of positions.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** backend
+- **Issue 4: BTC Options trading is not working.**
+    - **Attempted fixes:** None. The agent implemented the UI and backend models, but has not debugged the execution flow.
+    - **Next debug checklist:**
+        1.  Inspect the  function in . It likely has placeholder logic.
+        2.  Add logging to see how the strike price and expiry are being calculated and what product ID is being searched for.
+        3.  Send a webhook with  and trace the execution path.
+    - **Why fix this issue and what will be achieved with the fix?** This is a core feature requested by the user.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** backend
+- **Issue 5: Dashboard refresh button is not working.**
+    - **Status:** BLOCKED (Blocked on: Issue 1)
+- **Issue 6: Alerts sometimes do not refresh automatically via WebSocket.**
+    - **Status:** NOT STARTED
 
 **In progress Task List**:
-- **Task 1: Guide User Through Subscription System Testing**
-    - **Where to resume:** Ask the user to test the new subscription system by creating a new account to test the user flow and logging in as an admin to test the management panel.
-    - **What will be achieved with this?** Confirmation that the core subscription logic and user roles work as expected.
-    - **Status:** USER VERIFICATION PENDING
-    - **Should Test frontend/backend/both after fix?** N/A (Pending user testing)
-    - **Blocked on something:** User feedback.
+- **Task 1: Stabilize Core Trading Logic**
+    - **Where to resume:** Debugging the backend startup error in .
+    - **What will be achieved with this?** A stable, functional backend with correct, deduplicated, and reversible trade execution.
+    - **Status:** BLOCKED
+    - **Should Test frontend/backend/both after fix?** both
+    - **Blocked on something:** The backend is non-functional.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks (Phase 1B & 1C):**
-    - **P0: Implement Options Trading Logic:**
-        - Add logic for options trading (OTM strike selection, expiry, reversals) to the  function in .
-        - Implement profit booking and partial position exit logic.
-        - Add UI controls for these settings on .
-    - **P1: Implement PDF Performance Reports:**
-        - Create a new backend endpoint to generate PDF reports of trade history.
-        - Add a UI on the frontend for users to download their performance reports.
-
-- **Future Tasks (Phase 2):**
-    - **P2: Integrate Stock Brokers:** Integrate Zerodha, AngelOne, and Fyers using the  agent. This will involve significant updates to both backend and frontend.
-    - **P2: Mobile OTP Authentication:** Replace or augment the current password-based authentication with a mobile OTP system.
+- **Upcoming Tasks:**
+    - **P1: Implement PDF Performance Reports:** Create a backend endpoint and frontend UI for users to generate and download trade history reports.
+- **Future Tasks:**
+    - **P2: Integrate Stock Brokers:** Integrate Zerodha, AngelOne, and Fyers using the  agent.
+    - **P2: Mobile OTP Authentication:** Implement a mobile OTP system.
 
 **Completed work in this session**
-- **Phase 1A MVP Fully Implemented:**
-  - User Authentication (JWT) and Session Persistence.
-  - Delta Exchange Integration for Futures Trading.
-  - Real-time TradingView Webhook with WebSocket push notifications.
-  - Core UI/UX including Dashboard, Settings, and Alerts pages.
-  - A comprehensive Subscription System with Admin Panel and dual user types.
-- **Numerous Bug Fixes:**
-  - Resolved UI layout issues, WebSocket connectivity,  serialization errors, incorrect API URLs, and timezone display (IST).
-  - Fixed trade execution logic (symbol parsing, quantity calculation) and data fetching (balance, open positions).
-  - Addressed authentication persistence and alert deduplication.
+- **Admin Panel Enhancements:**
+  - Implemented customizable text for plan descriptions and the welcome modal in  and .
+  - Added a Delete User feature with a confirmation modal on  and a corresponding  endpoint.
+- **User & UI Features:**
+  - Added a Change Password section to .
+  - Added password visibility toggles on .
+  - Updated the dashboard header to always display the user's name, mobile, package, and subscription expiry date.
+  - Renamed broker status panels and added a Coming Soon panel for stockbrokers on .
+  - Added a prominent, permanent static IP display () on  for whitelisting.
+- **Core Trading Logic Overhaul:**
+  - Refactored settings to support 4 independent strategies (BTC/ETH Futures/Options) with separate toggles and lot sizes in  and .
+  - Updated webhook logic in  to route trades based on a  field in the webhook payload (, , ).
+  - Added a comprehensive webhook setup guide to .
+- **Critical Bug Fixes:**
+  - **Fixed Alert Cross-Contamination:** Ensured ETH signals only trigger ETH trades and BTC signals only trigger BTC trades.
+  - **Rejected Plain-Text Webhooks:** The backend now strictly requires JSON format, solving a major source of erroneous trades.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - **Frontend:** React, Tailwind CSS, Shadcn UI, WebSockets
-- **Backend:** FastAPI, MongoDB (motor), PyJWT
-- **Architecture:** Full-stack application with a React SPA consuming a FastAPI backend, featuring real-time updates via WebSockets.
+- **Backend:** FastAPI, MongoDB (motor), PyJWT,  for deduplication.
+- **Architecture:** SPA with a monolithic FastAPI backend.
 
 **key DB schema**
-- **users:** 
-- **alerts:** 
-- **app_config:** 
+- **users:** schema now includes fields for all 4 strategies (e.g., , , , ...).
+- **app_config:** schema now includes  for customizable welcome modal text.
+- **webhook_locks (New):**  - intended to solve webhook race conditions.
 
 **All files of reference**
-- : The single source of truth for all backend logic, including authentication, trading, webhooks, and the new subscription system.
-- : Main frontend router, which now includes logic to direct users based on their subscription status.
-- : The new page where users select their subscription plan.
-- : The new admin panel for user management.
-- : Updated to show subscription type, saved credentials, and unique webhook URLs.
-- : Manages user login state and token persistence.
+- : All backend logic. **Currently has a startup error.**
+- : UI for dashboard, header, broker status.
+- : UI for all trading strategies, IP whitelisting, password change, and webhook guide.
+- : UI for user deletion and text customization.
+- : UI for login/registration.
+
+**Areas that need refactoring**:
+- The  file is extremely large and difficult to maintain. It should be broken down into a proper project structure with directories for routes, models, services, and database clients.
+
+**key api endpoints**
+- : Core endpoint for all trade signals. Heavily modified.
+- : Saves the 4-strategy configuration.
+- : New endpoint for user password changes.
+- : New endpoint to delete users.
+- : New endpoint to save welcome message config.
 
 **Critical Info for New Agent**
-- **Admin Credentials:** The admin login is , . The admin panel is at the  route.
-- **Egress IP:** The server's static outgoing IP is . This IP must be whitelisted in Delta Exchange for both testnet and production API keys to work.
-- **Subscription Logic:** The application now has a core subscription model. New users are directed to a subscription page to start a free trial. Access to the dashboard is contingent on having an active subscription or trial.
-- **Webhook URLs:** There are two types of webhook URLs.
-  - Admin (for 'WolffsInsta Alerts' users): 
-  - Custom (for 'Custom Strategy' users): 
-
-**documents and test reports created in this job**
-- 
-- 
+- **THE BACKEND IS BROKEN.** Your first task is to fix the startup crash in . Check the supervisor logs immediately. The error is almost certainly related to the new deduplication lock or position reversal logic implemented at the end of the last session.
+- **Static IP:** The permanent egress IP for whitelisting on Delta Exchange is . This is displayed on the Settings page.
+- **Webhook Format:** The application now **requires** a JSON payload with  and  fields. Plain text alerts are rejected. A  field (, , or ) can be used to route trades. This is documented on the Settings page.
+- **Preview Environment Limitation:** The user is aware that the preview environment pod sleeps during inactivity, which stops the backend service. This is expected behavior for the development environment. For 24/7 operation, the user must deploy to production.
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Request:** Implement a subscription system where new users choose a plan ('WolffsInsta Alerts' or 'Custom Strategy'), start a trial, and then get dashboard access. Also asked for admin login details. (Status: **Completed**, pending user verification)
-9. **Request:** Remember API keys for easy reconnection. (Status: **Completed**)
-8. **Issue:** Getting logged out on page refresh; alerts disappearing on navigation; seeing duplicate alerts. (Status: **Completed**)
-7. **Issue:** Alerts showing UNKNOWN, incorrect trade quantity (5 instead of 10), and wrong balance display. (Status: **Completed**)
-6. **Issue:** Open positions showing 0 on dashboard despite having 15 lots open; contract quantity setting showing 1 instead of 10. (Status: **Completed**)
-5. **Question:** Can the testnet IP address be used for a real account? (Status: **Answered**, Yes)
-4. **Issue:** Dashboard showing disconnected even after a successful connection message. (Status: **Completed**)
-3. **Issue:** Balance showing /bin/bash.00; questions about connection persistence. (Status: **Completed**)
-2. **Issue:** A trade was not executed despite a signal being fired. (Status: **Completed**)
-1. **Issue:** Still getting an invalid token error on testnet; requested to show last 100 notifications in IST. (Status: **Completed**)
+10. User asks for 4 different strategies (BTC/ETH, Futures/Options). (Status: **Completed**)
+9.  User asks how to run two different pine script strategies on the same instrument (e.g., BTC), one for futures and one for options. (Status: **Completed**, via  field in webhook)
+8.  User requests webhook setup instructions be added to the settings page. (Status: **Completed**)
+7.  User reports that an ETH alert is still causing duplicate/erroneous trades on both ETH and BTC. (Status: **Fix Attempted**, but led to backend crash)
+6.  User asks why the agent sleeps during the trial phase. (Status: **Answered**)
+5.  User clarifies that the issue is the *app itself* stops receiving live alerts when the agent sleeps. (Status: **Answered**, explained preview environment limitations)
+4.  User reports multiple critical issues: refresh button not working, duplicate alerts still happening (9:17pm), and incorrect trade logic (sell signal doesn't reverse existing buy position). (Status: **In Progress**, led to backend crash)
 
 **Project Health Check:**
-- **Broken:** None.
-- **Mocked:** The payment gateway is mocked with a Start Free Trial button. The subscription flow does not involve real payments yet.
+- **Broken:** The backend service is non-functional and crashes on startup.
+- **Mocked:** Payment gateway for subscriptions.
 
 **3rd Party Integrations**
 - **Delta Exchange API** — requires User API Key.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** []
-- **Known regressions:** None
+- **Known regressions:** The entire backend is down.
 
 **Credentials to test flow:**
-- **Admin User:**
-  - Mobile: 
-  - Password: 
-- **Regular User:** A new user must be registered to test the full subscription and trial activation flow.</analysis>
+- **Admin User:** Mobile: , Password: 
+- **Regular User:** A new user should be registered for clean testing.
+
+**What agent forgot to execute**
+- The agent failed to check the backend logs (INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 7
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 6
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 5
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 4
+INFO:     connection closed
+2026-02-14 16:00:12,983 - server - INFO - WebSocket disconnected. Total connections: 3
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 2
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 1
+INFO:     connection closed
+2026-02-14 16:00:12,984 - server - INFO - WebSocket disconnected. Total connections: 0
+INFO:     connection closed
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [321]
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+INFO:     Stopping reloader process [46]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [656] using WatchFiles
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}'
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [46] using WatchFiles
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 281
+    })
+    ^
+SyntaxError: unmatched '}') after the restart command failed and returned a 520 error. This is the most critical next step to diagnose the startup crash.</analysis>
