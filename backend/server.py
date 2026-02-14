@@ -1050,16 +1050,41 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         if strategy_type not in ["futures", "options", "both"]:
             strategy_type = "both"
     
+    # Normalize symbol - clean up various formats
+    # BTCUSD.P, BTCUSD, BTCUSDT, BTC-USD -> BTCUSD
+    # ETHUSD.P, ETHUSD, ETHUSDT, ETH-USD -> ETHUSD
+    original_symbol = symbol
+    symbol = symbol.upper().replace(".P", "").replace("-", "").replace("USDT", "USD")
+    if symbol == "BTC" or symbol.startswith("BTC"):
+        symbol = "BTCUSD"
+    elif symbol == "ETH" or symbol.startswith("ETH"):
+        symbol = "ETHUSD"
+    
+    # Determine instrument from symbol
+    instrument = None
+    if "BTC" in symbol:
+        instrument = "BTC"
+    elif "ETH" in symbol:
+        instrument = "ETH"
+    
+    logger.info(f"Parsed alert: original={original_symbol}, normalized={symbol}, instrument={instrument}, action={action}")
+    
     # Normalize action
     if action in ["BUY", "LONG", "ENTRY_LONG"]:
         action = "BUY"
     elif action in ["SELL", "SHORT", "ENTRY_SHORT", "EXIT"]:
         action = "SELL"
     
+    # Reject alerts with unknown symbol or action
+    if symbol == "UNKNOWN" or action not in ["BUY", "SELL"] or not instrument:
+        logger.warning(f"Invalid alert rejected: symbol={symbol}, action={action}, instrument={instrument}")
+        return {"status": "rejected", "reason": "Invalid symbol or action"}
+    
     # DEDUPLICATION: Check if similar alert exists within last 10 seconds
+    # Use normalized symbol and instrument for dedup
     ten_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
     existing_alert = await db.alerts.find_one({
-        "symbol": symbol,
+        "instrument": instrument,  # Use instrument instead of raw symbol
         "action": action,
         "source": source,
         "source_id": source_id,
@@ -1067,7 +1092,8 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
     })
     
     if existing_alert:
-        logger.info(f"Duplicate alert ignored: {symbol} {action}")
+        logger.info(f"Duplicate alert ignored: {instrument} {action} (existing: {existing_alert.get('id')})")
+        return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
         return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
     
     # Create alert record
