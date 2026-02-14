@@ -451,9 +451,9 @@ export default function SettingsPage() {
                                 {/* Whitelisted IP Reference */}
                                 <div className="p-3 bg-neon-green-dim rounded-sm border border-neon-green/20">
                                     <p className="text-gray-300 text-sm">
-                                        <strong className="text-neon-green">Whitelisted IP:</strong>{' '}
+                                        <strong className="text-neon-green">Preview IP:</strong>{' '}
                                         <code className="text-neon-green font-mono text-base">104.198.214.223</code>
-                                        <span className="text-gray-500 ml-2">(ensure this IP is whitelisted in Delta Exchange)</span>
+                                        <span className="text-gray-500 ml-2">(for production deployment, contact support)</span>
                                     </p>
                                 </div>
                             </div>
