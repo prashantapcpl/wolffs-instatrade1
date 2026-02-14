@@ -537,20 +537,7 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent className="p-0">
                             <ScrollArea className="h-[500px]">
-                                {(() => {
-                                    const formatExpiryDate = (dateStr) => {
-                                        if (!dateStr) return 'N/A';
-                                        const date = new Date(dateStr);
-                                        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                                    };
-
-                                    const getPlanDisplayName = (planType) => {
-                                        if (planType === 'wolffs_alerts') return 'WolffsInsta Alerts';
-                                        if (planType === 'custom_strategy') return 'Custom Strategy';
-                                        return planType || 'N/A';
-                                    };
-
-                                    return loading ? (
+                                {loading ? (
                                     <div className="p-6 space-y-4">
                                         {[...Array(5)].map((_, i) => (
                                             <div key={i} className="skeleton h-16 rounded-sm" />
