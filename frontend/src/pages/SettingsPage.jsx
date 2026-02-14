@@ -184,11 +184,20 @@ export default function SettingsPage() {
         try {
             await axios.put(`${API_URL}/api/settings`, {
                 instruments,
-                trade_futures: tradeFutures,
-                trade_options: tradeOptions,
-                btc_lot_size: btcLotSize,
-                eth_lot_size: ethLotSize,
-                contract_quantity: contractQuantity,
+                // BTC Strategies
+                btc_futures_enabled: btcFuturesEnabled,
+                btc_futures_lot_size: btcFuturesLotSize,
+                btc_options_enabled: btcOptionsEnabled,
+                btc_options_lot_size: btcOptionsLotSize,
+                // ETH Strategies
+                eth_futures_enabled: ethFuturesEnabled,
+                eth_futures_lot_size: ethFuturesLotSize,
+                eth_options_enabled: ethOptionsEnabled,
+                eth_options_lot_size: ethOptionsLotSize,
+                // Options Settings
+                options_strike_selection: optionsStrikeSelection,
+                options_expiry: optionsExpiry,
+                // General
                 profit_percentage: profitPercentage,
                 exit_half_position: exitHalfPosition,
                 subscriber_type: subscriberType,
