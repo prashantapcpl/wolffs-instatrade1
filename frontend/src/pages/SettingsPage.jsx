@@ -77,11 +77,20 @@ export default function SettingsPage() {
             const response = await axios.get(`${API_URL}/api/settings`);
             const settings = response.data.trading_settings || {};
             setInstruments(settings.instruments || ['BTC', 'ETH']);
-            setTradeFutures(settings.trade_futures !== false);
-            setTradeOptions(settings.trade_options || false);
-            setBtcLotSize(settings.btc_lot_size || settings.contract_quantity || 1);
-            setEthLotSize(settings.eth_lot_size || settings.contract_quantity || 1);
-            setContractQuantity(settings.contract_quantity || 1);
+            // BTC Strategies
+            setBtcFuturesEnabled(settings.btc_futures_enabled !== false);
+            setBtcFuturesLotSize(settings.btc_futures_lot_size || 1);
+            setBtcOptionsEnabled(settings.btc_options_enabled || false);
+            setBtcOptionsLotSize(settings.btc_options_lot_size || 1);
+            // ETH Strategies
+            setEthFuturesEnabled(settings.eth_futures_enabled !== false);
+            setEthFuturesLotSize(settings.eth_futures_lot_size || 1);
+            setEthOptionsEnabled(settings.eth_options_enabled || false);
+            setEthOptionsLotSize(settings.eth_options_lot_size || 1);
+            // Options Settings
+            setOptionsStrikeSelection(settings.options_strike_selection || 'atm');
+            setOptionsExpiry(settings.options_expiry || 'weekly');
+            // General
             setProfitPercentage(settings.profit_percentage || 75);
             setExitHalfPosition(settings.exit_half_position || false);
             setSubscriberType(settings.subscriber_type || 'wolffs_alerts');
