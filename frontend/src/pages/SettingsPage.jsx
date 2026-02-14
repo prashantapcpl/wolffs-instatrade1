@@ -866,10 +866,19 @@ export default function SettingsPage() {
                             TradingView Webhook Setup
                         </CardTitle>
                         <CardDescription className="text-gray-500">
-                            How to configure your TradingView alerts for different strategies
+                            Configure your TradingView alerts using the required JSON format
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                        {/* IMPORTANT: JSON Format Required */}
+                        <div className="p-4 bg-neon-red-dim rounded-sm border border-neon-red/30">
+                            <p className="text-neon-red font-medium mb-2">⚠️ IMPORTANT: JSON Format Required</p>
+                            <p className="text-gray-300 text-sm">
+                                Plain text alerts like "BUY" or "SELL" are NOT supported. 
+                                You MUST use JSON format with <code className="text-neon-green">symbol</code> and <code className="text-neon-green">action</code> fields.
+                            </p>
+                        </div>
+
                         {/* Webhook URL */}
                         <div className="p-4 bg-neon-green-dim rounded-sm border border-neon-green/30">
                             <p className="text-neon-green font-medium mb-2">Your Webhook URL:</p>
