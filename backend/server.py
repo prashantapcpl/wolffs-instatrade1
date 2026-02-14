@@ -839,7 +839,18 @@ async def execute_trades_for_alert(alert: dict):
 
 @api_router.get("/alerts")
 async def get_alerts(limit: int = 100, current_user: dict = Depends(get_current_user)):
-    alerts = await db.alerts.find({}, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
+    """Get alerts based on user's subscriber type"""
+    settings = current_user.get("trading_settings", {})
+    subscriber_type = settings.get("subscriber_type", "wolffs_alerts")
+    
+    if subscriber_type == "wolffs_alerts":
+        # Show only WolffsInsta admin alerts
+        query = {"source": "wolffs_alerts"}
+    else:
+        # Show only user's custom strategy alerts
+        query = {"source": "custom_strategy", "source_id": current_user["id"]}
+    
+    alerts = await db.alerts.find(query, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
     return {"alerts": alerts}
 
 @api_router.get("/alerts/recent")
