@@ -939,15 +939,30 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
     return {
         "trading_settings": {
             "instruments": settings.get("instruments", ["BTC", "ETH"]),
-            "trade_futures": settings.get("trade_futures", True),
-            "trade_options": settings.get("trade_options", False),
-            "btc_lot_size": settings.get("btc_lot_size", settings.get("contract_quantity", 1)),
-            "eth_lot_size": settings.get("eth_lot_size", settings.get("contract_quantity", 1)),
-            "contract_quantity": settings.get("contract_quantity", 1),
+            # BTC Strategy Settings
+            "btc_futures_enabled": settings.get("btc_futures_enabled", settings.get("trade_futures", True)),
+            "btc_futures_lot_size": settings.get("btc_futures_lot_size", settings.get("btc_lot_size", 1)),
+            "btc_options_enabled": settings.get("btc_options_enabled", settings.get("trade_options", False)),
+            "btc_options_lot_size": settings.get("btc_options_lot_size", 1),
+            # ETH Strategy Settings
+            "eth_futures_enabled": settings.get("eth_futures_enabled", settings.get("trade_futures", True)),
+            "eth_futures_lot_size": settings.get("eth_futures_lot_size", settings.get("eth_lot_size", 1)),
+            "eth_options_enabled": settings.get("eth_options_enabled", settings.get("trade_options", False)),
+            "eth_options_lot_size": settings.get("eth_options_lot_size", 1),
+            # Options Settings
+            "options_strike_selection": settings.get("options_strike_selection", "atm"),
+            "options_expiry": settings.get("options_expiry", "weekly"),
+            # General Settings
             "profit_percentage": settings.get("profit_percentage", 75.0),
             "exit_half_position": settings.get("exit_half_position", False),
             "subscriber_type": settings.get("subscriber_type", "wolffs_alerts"),
-            "webhook_id": settings.get("webhook_id")
+            "webhook_id": settings.get("webhook_id"),
+            # Legacy fields
+            "trade_futures": settings.get("trade_futures", True),
+            "trade_options": settings.get("trade_options", False),
+            "btc_lot_size": settings.get("btc_lot_size", 1),
+            "eth_lot_size": settings.get("eth_lot_size", 1),
+            "contract_quantity": settings.get("contract_quantity", 1)
         },
         "has_delta_credentials": user.get("delta_credentials") is not None
     }
