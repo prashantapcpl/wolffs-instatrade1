@@ -436,11 +436,21 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    subscription = user.get("subscription", {})
+    
+    # Check if subscription is expired
+    if subscription.get("expiry_date"):
+        expiry = datetime.fromisoformat(subscription["expiry_date"].replace('Z', '+00:00'))
+        if expiry < datetime.now(timezone.utc):
+            subscription["status"] = "expired"
+    
     return {
         "id": user["id"],
         "mobile": user["mobile"],
         "name": user.get("name"),
+        "is_admin": user.get("is_admin", False),
         "has_delta_credentials": user.get("delta_credentials") is not None,
+        "subscription": subscription,
         "trading_settings": user.get("trading_settings", {
             "instruments": ["BTC", "ETH"],
             "trade_futures": True,
