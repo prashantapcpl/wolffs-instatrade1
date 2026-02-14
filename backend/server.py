@@ -203,12 +203,31 @@ DEFAULT_PLAN_CONFIG = {
     }
 }
 
+# Default welcome message configuration
+DEFAULT_WELCOME_CONFIG = {
+    "title": "Welcome to Wolffs AutoTrade!",
+    "description": "Your automated trading dashboard is ready. To get started:",
+    "steps": [
+        "Connect your Delta Exchange account in Settings",
+        "Configure your trading instruments (BTC/ETH)",
+        "Set up TradingView webhook with the provided URL"
+    ],
+    "button_text": "Got it, Let's Go!"
+}
+
 async def get_plan_config():
     """Get plan configuration from database or use defaults"""
     config = await db.config.find_one({"type": "plans"}, {"_id": 0})
     if config:
         return config.get("plans", DEFAULT_PLAN_CONFIG)
     return DEFAULT_PLAN_CONFIG
+
+async def get_welcome_config():
+    """Get welcome message configuration from database or use defaults"""
+    config = await db.config.find_one({"type": "welcome"}, {"_id": 0})
+    if config:
+        return config.get("welcome", DEFAULT_WELCOME_CONFIG)
+    return DEFAULT_WELCOME_CONFIG
 
 async def init_plan_config():
     """Initialize plan config in database if not exists"""
@@ -217,6 +236,15 @@ async def init_plan_config():
         await db.config.insert_one({
             "type": "plans",
             "plans": DEFAULT_PLAN_CONFIG,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Initialize welcome config
+    existing_welcome = await db.config.find_one({"type": "welcome"})
+    if not existing_welcome:
+        await db.config.insert_one({
+            "type": "welcome",
+            "welcome": DEFAULT_WELCOME_CONFIG,
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
 
