@@ -295,6 +295,8 @@ async def register(user_data: UserCreate):
         raise HTTPException(status_code=400, detail="Mobile number already registered")
     
     user_id = str(uuid.uuid4())
+    webhook_id = str(uuid.uuid4())[:12]  # Short unique webhook ID for custom strategies
+    
     user_doc = {
         "id": user_id,
         "mobile": user_data.mobile,
@@ -302,13 +304,16 @@ async def register(user_data: UserCreate):
         "name": user_data.name,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "delta_credentials": None,
+        "delta_connected": False,
         "trading_settings": {
             "instruments": ["BTC", "ETH"],
             "trade_futures": True,
             "trade_options": False,
             "contract_quantity": 1,
             "profit_percentage": 75.0,
-            "exit_half_position": False
+            "exit_half_position": False,
+            "subscriber_type": "wolffs_alerts",
+            "webhook_id": webhook_id
         }
     }
     await db.users.insert_one(user_doc)
