@@ -479,11 +479,46 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
 
 @api_router.delete("/delta/disconnect")
 async def disconnect_delta(current_user: dict = Depends(get_current_user)):
+    # Keep credentials saved but mark as disconnected
     await db.users.update_one(
         {"id": current_user["id"]},
-        {"$set": {"delta_credentials": None}}
+        {"$set": {"delta_connected": False}}
     )
-    return {"message": "Delta Exchange disconnected"}
+    return {"message": "Delta Exchange disconnected (credentials saved)"}
+
+@api_router.post("/delta/reconnect")
+async def reconnect_delta(current_user: dict = Depends(get_current_user)):
+    """Reconnect using saved credentials"""
+    credentials = current_user.get("delta_credentials")
+    if not credentials:
+        raise HTTPException(status_code=400, detail="No saved credentials found")
+    
+    delta_client = DeltaExchangeClient(
+        api_key=credentials["api_key"],
+        api_secret=credentials["api_secret"],
+        is_testnet=credentials.get("is_testnet", False),
+        region=credentials.get("region", "global")
+    )
+    
+    result = await delta_client.test_connection()
+    
+    if result["success"]:
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"delta_connected": True, "delta_last_connected": datetime.now(timezone.utc).isoformat()}}
+        )
+        return {"message": "Reconnected successfully", "connected": True}
+    else:
+        raise HTTPException(status_code=400, detail=f"Reconnection failed: {result['error']}")
+
+@api_router.delete("/delta/clear-credentials")
+async def clear_delta_credentials(current_user: dict = Depends(get_current_user)):
+    """Permanently remove saved credentials"""
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"delta_credentials": None, "delta_connected": False}}
+    )
+    return {"message": "Credentials removed"}
 
 @api_router.get("/delta/products")
 async def get_delta_products(current_user: dict = Depends(get_current_user)):
