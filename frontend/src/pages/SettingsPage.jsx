@@ -204,6 +204,37 @@ export default function SettingsPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleChangePassword = async () => {
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            toast.error('Please fill all password fields');
+            return;
+        }
+        if (newPassword !== confirmNewPassword) {
+            toast.error('New passwords do not match');
+            return;
+        }
+        if (newPassword.length < 6) {
+            toast.error('New password must be at least 6 characters');
+            return;
+        }
+        
+        setChangingPassword(true);
+        try {
+            await axios.post(`${API_URL}/api/auth/change-password`, {
+                current_password: currentPassword,
+                new_password: newPassword
+            });
+            toast.success('Password changed successfully!');
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmNewPassword('');
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to change password');
+        } finally {
+            setChangingPassword(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-obsidian">
             {/* Header */}
