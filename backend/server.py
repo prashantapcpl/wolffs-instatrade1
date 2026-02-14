@@ -1207,7 +1207,7 @@ async def execute_trades_for_alert(alert: dict):
                 })
         
         if not strategies_to_execute:
-            logger.info(f"No strategies enabled for {clean_symbol} for user {user['id']}")
+            logger.info(f"No strategies enabled for {alert_instrument} for user {user['id']}")
             continue
         
         logger.info(f"Executing {len(strategies_to_execute)} strategies for user {user['id']}: {strategies_to_execute}")
