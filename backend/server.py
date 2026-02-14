@@ -1128,20 +1128,57 @@ async def execute_trades_for_alert(alert: dict):
         instruments = settings.get("instruments", [])
         
         # Check if symbol matches user's instruments
-        should_trade = False
+        matched_instrument = None
         for inst in instruments:
             if inst.upper() in clean_symbol or clean_symbol in inst.upper():
-                should_trade = True
+                matched_instrument = inst.upper()
                 logger.info(f"Symbol {clean_symbol} matches instrument {inst}")
                 break
         
-        if not should_trade:
+        if not matched_instrument:
             logger.info(f"Symbol {clean_symbol} does not match any instruments: {instruments}")
             continue
-            
-        if not settings.get("trade_futures", True):
-            logger.info(f"Futures trading disabled for user {user['id']}")
+        
+        # Determine which strategies to execute based on user settings
+        strategies_to_execute = []
+        
+        if matched_instrument == "BTC" or "BTC" in clean_symbol:
+            if settings.get("btc_futures_enabled", True):
+                strategies_to_execute.append({
+                    "type": "futures",
+                    "instrument": "BTC",
+                    "lot_size": settings.get("btc_futures_lot_size", settings.get("btc_lot_size", 1))
+                })
+            if settings.get("btc_options_enabled", False):
+                strategies_to_execute.append({
+                    "type": "options",
+                    "instrument": "BTC",
+                    "lot_size": settings.get("btc_options_lot_size", 1),
+                    "strike_selection": settings.get("options_strike_selection", "atm"),
+                    "expiry": settings.get("options_expiry", "weekly")
+                })
+        
+        if matched_instrument == "ETH" or "ETH" in clean_symbol:
+            if settings.get("eth_futures_enabled", True):
+                strategies_to_execute.append({
+                    "type": "futures",
+                    "instrument": "ETH",
+                    "lot_size": settings.get("eth_futures_lot_size", settings.get("eth_lot_size", 1))
+                })
+            if settings.get("eth_options_enabled", False):
+                strategies_to_execute.append({
+                    "type": "options",
+                    "instrument": "ETH",
+                    "lot_size": settings.get("eth_options_lot_size", 1),
+                    "strike_selection": settings.get("options_strike_selection", "atm"),
+                    "expiry": settings.get("options_expiry", "weekly")
+                })
+        
+        if not strategies_to_execute:
+            logger.info(f"No strategies enabled for {clean_symbol} for user {user['id']}")
             continue
+        
+        logger.info(f"Executing {len(strategies_to_execute)} strategies for user {user['id']}: {strategies_to_execute}")
         
         try:
             credentials = user["delta_credentials"]
@@ -1152,39 +1189,44 @@ async def execute_trades_for_alert(alert: dict):
                 region=credentials.get("region", "global")
             )
             
-            # Get product ID
+            # Get all products
             products = await delta_client.get_products()
-            product_id = None
-            product_symbol = None
             
-            for p in products.get("result", []):
-                p_symbol = p.get("symbol", "").upper()
-                p_type = str(p.get("product_type", "")).lower()
+            # Execute each strategy
+            for strategy in strategies_to_execute:
+                product_id = None
+                product_symbol = None
+                strategy_type = strategy["type"]
+                instrument = strategy["instrument"]
+                quantity = strategy["lot_size"]
                 
-                # Match BTC or ETH perpetual/futures - check symbol directly for BTCUSD, ETHUSD
-                # Also handle cases where product_type might be None
-                is_perpetual = 'perpetual' in p_type or 'futures' in p_type or p_symbol in ['BTCUSD', 'ETHUSD']
+                for p in products.get("result", []):
+                    p_symbol = p.get("symbol", "").upper()
+                    p_type = str(p.get("product_type", "")).lower()
+                    
+                    if strategy_type == "futures":
+                        # Match perpetual/futures
+                        is_perpetual = 'perpetual' in p_type or 'futures' in p_type or p_symbol in ['BTCUSD', 'ETHUSD']
+                        if instrument in p_symbol and (is_perpetual or p_symbol in ['BTCUSD', 'ETHUSD']):
+                            product_id = p["id"]
+                            product_symbol = p["symbol"]
+                            logger.info(f"Found futures product: {product_symbol} (ID: {product_id})")
+                            break
+                    elif strategy_type == "options":
+                        # Match options - look for call options for BUY, put options for SELL
+                        is_option = 'option' in p_type or 'call' in p_type or 'put' in p_type
+                        option_type = "call" if action == "BUY" else "put"
+                        if instrument in p_symbol and is_option and option_type in p_symbol.lower():
+                            # For now, get the first matching option
+                            # TODO: Implement proper strike selection based on ATM/OTM
+                            product_id = p["id"]
+                            product_symbol = p["symbol"]
+                            logger.info(f"Found options product: {product_symbol} (ID: {product_id})")
+                            break
                 
-                if clean_symbol in p_symbol and (is_perpetual or p_symbol in ['BTCUSD', 'ETHUSD']):
-                    product_id = p["id"]
-                    product_symbol = p["symbol"]
-                    logger.info(f"Found matching product: {product_symbol} (ID: {product_id}, type: {p_type})")
-                    break
-            
-            if not product_id:
-                logger.warning(f"No matching product found for {symbol} (cleaned: {clean_symbol})")
-                # Log available products for debugging
-                available = [p.get("symbol") for p in products.get("result", []) if clean_symbol in p.get("symbol", "").upper()]
-                logger.info(f"Products containing {clean_symbol}: {available[:10]}")
-                continue
-            
-            # Calculate quantity - use instrument-specific lot size
-            if "BTC" in clean_symbol:
-                quantity = settings.get("btc_lot_size", settings.get("contract_quantity", 1))
-            elif "ETH" in clean_symbol:
-                quantity = settings.get("eth_lot_size", settings.get("contract_quantity", 1))
-            else:
-                quantity = settings.get("contract_quantity", 1)
+                if not product_id:
+                    logger.warning(f"No matching {strategy_type} product found for {instrument}")
+                    continue
             
             # Place order
             side = "buy" if action == "BUY" else "sell"
