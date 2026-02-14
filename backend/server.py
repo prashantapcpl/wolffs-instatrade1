@@ -1011,23 +1011,10 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
                 if not isinstance(body, dict):
                     body = {"message": str(body)}
             except json.JSONDecodeError:
-                body_upper = body_text.strip().upper()
-                parts = body_upper.split()
-                
-                if len(parts) == 1:
-                    if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
-                        body = {"action": parts[0], "symbol": "BTCUSD", "inferred": True}
-                    else:
-                        body = {"message": body_text}
-                elif len(parts) >= 2:
-                    if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
-                        body = {"action": parts[0], "symbol": parts[1]}
-                    elif parts[1] in ["BUY", "SELL", "LONG", "SHORT"]:
-                        body = {"symbol": parts[0], "action": parts[1]}
-                    else:
-                        body = {"message": body_text}
-                else:
-                    body = {"message": body_text}
+                # STRICT: Plain text alerts are NOT supported
+                # Require JSON format with symbol and action
+                logger.warning(f"Non-JSON webhook rejected: {body_text[:100]}")
+                body = {"_rejected": True, "_reason": "Plain text format not supported. Use JSON with symbol and action fields."}
     except Exception as e:
         logger.error(f"Error parsing webhook body: {e}")
         body = {}
