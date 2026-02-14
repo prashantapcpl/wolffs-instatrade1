@@ -159,6 +159,67 @@ class OrderRequest(BaseModel):
     side: str  # buy or sell
     limit_price: Optional[str] = None
 
+# ======================= ADMIN CONFIG =======================
+
+# Admin credentials (in production, use environment variables)
+ADMIN_MOBILE = os.environ.get('ADMIN_MOBILE', '9999999999')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin@wolffs2024')
+
+# Default plan configurations (stored in DB, can be updated by admin)
+DEFAULT_PLAN_CONFIG = {
+    "wolffs_alerts": {
+        "name": "WolffsInsta Alerts",
+        "description": "Get premium trading signals from WolffsInsta expert strategies. Automated execution on your Delta Exchange account.",
+        "features": [
+            "Real-time BTC & ETH trading signals",
+            "Automatic trade execution",
+            "Professional risk management",
+            "24/7 market monitoring",
+            "Telegram support group access"
+        ],
+        "price": 2999,
+        "currency": "INR",
+        "duration_days": 30,
+        "trial_days": 2,
+        "discount_percent": 0,
+        "referral_discount": 10
+    },
+    "custom_strategy": {
+        "name": "Custom Strategy",
+        "description": "Deploy your own TradingView or Chartink strategies with your unique webhook. Full control over your trading signals.",
+        "features": [
+            "Personal webhook URL",
+            "Connect TradingView/Chartink",
+            "Unlimited custom alerts",
+            "Automatic trade execution",
+            "Full strategy control"
+        ],
+        "price": 1999,
+        "currency": "INR",
+        "duration_days": 30,
+        "trial_days": 2,
+        "discount_percent": 0,
+        "referral_discount": 10
+    }
+}
+
+async def get_plan_config():
+    """Get plan configuration from database or use defaults"""
+    config = await db.config.find_one({"type": "plans"}, {"_id": 0})
+    if config:
+        return config.get("plans", DEFAULT_PLAN_CONFIG)
+    return DEFAULT_PLAN_CONFIG
+
+async def init_plan_config():
+    """Initialize plan config in database if not exists"""
+    existing = await db.config.find_one({"type": "plans"})
+    if not existing:
+        await db.config.insert_one({
+            "type": "plans",
+            "plans": DEFAULT_PLAN_CONFIG,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+
 # ======================= UTILITIES =======================
 
 def hash_password(password: str) -> str:
