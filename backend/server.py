@@ -1076,6 +1076,7 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         "id": alert_id,
         "symbol": symbol,
         "action": action,
+        "strategy_type": strategy_type,  # NEW: which product type to execute on
         "price": float(price) if price and str(price).replace('.', '').replace('-', '').isdigit() else None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "message": message,
