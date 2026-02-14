@@ -1132,12 +1132,14 @@ async def execute_trades_for_alert(alert: dict):
     action = alert["action"]
     source = alert.get("source", "wolffs_alerts")
     source_id = alert.get("source_id", "admin")
-    alert_strategy_type = alert.get("strategy_type", "both")  # NEW: Get strategy type from alert
+    alert_strategy_type = alert.get("strategy_type", "both")
+    alert_instrument = alert.get("instrument")  # Use pre-determined instrument
     
-    # Clean up symbol - remove .P suffix and other variations
-    # BTCUSD.P -> BTC, ETHUSD.P -> ETH
-    clean_symbol = symbol.upper().replace(".P", "").replace("USD", "").replace("USDT", "").replace("PERP", "")
-    logger.info(f"Processing trade for symbol: {symbol} -> cleaned: {clean_symbol}, action: {action}, source: {source}")
+    logger.info(f"Processing trade: symbol={symbol}, instrument={alert_instrument}, action={action}, strategy_type={alert_strategy_type}")
+    
+    if not alert_instrument:
+        logger.error(f"No instrument specified in alert, skipping trade execution")
+        return
     
     # Find users based on alert source
     if source == "wolffs_alerts":
@@ -1160,32 +1162,24 @@ async def execute_trades_for_alert(alert: dict):
     
     for user in users:
         settings = user.get("trading_settings", {})
-        instruments = settings.get("instruments", [])
+        instruments = settings.get("instruments", ["BTC", "ETH"])
         
-        # Check if symbol matches user's instruments
-        matched_instrument = None
-        for inst in instruments:
-            if inst.upper() in clean_symbol or clean_symbol in inst.upper():
-                matched_instrument = inst.upper()
-                logger.info(f"Symbol {clean_symbol} matches instrument {inst}")
-                break
-        
-        if not matched_instrument:
-            logger.info(f"Symbol {clean_symbol} does not match any instruments: {instruments}")
+        # Check if user has this instrument enabled
+        if alert_instrument not in [i.upper() for i in instruments]:
+            logger.info(f"User {user['id']} does not have {alert_instrument} enabled")
             continue
         
-        # Determine which strategies to execute based on user settings AND alert strategy_type
+        # Determine which strategies to execute - STRICTLY match instrument
         strategies_to_execute = []
         
-        if matched_instrument == "BTC" or "BTC" in clean_symbol:
-            # Only add futures if: user enabled AND (alert says futures OR both)
+        # BTC signals -> Only BTC strategies
+        if alert_instrument == "BTC":
             if settings.get("btc_futures_enabled", True) and alert_strategy_type in ["futures", "both"]:
                 strategies_to_execute.append({
                     "type": "futures",
                     "instrument": "BTC",
-                    "lot_size": settings.get("btc_futures_lot_size", settings.get("btc_lot_size", 1))
+                    "lot_size": settings.get("btc_futures_lot_size", 1)
                 })
-            # Only add options if: user enabled AND (alert says options OR both)
             if settings.get("btc_options_enabled", False) and alert_strategy_type in ["options", "both"]:
                 strategies_to_execute.append({
                     "type": "options",
@@ -1195,15 +1189,14 @@ async def execute_trades_for_alert(alert: dict):
                     "expiry": settings.get("options_expiry", "weekly")
                 })
         
-        if matched_instrument == "ETH" or "ETH" in clean_symbol:
-            # Only add futures if: user enabled AND (alert says futures OR both)
+        # ETH signals -> Only ETH strategies
+        elif alert_instrument == "ETH":
             if settings.get("eth_futures_enabled", True) and alert_strategy_type in ["futures", "both"]:
                 strategies_to_execute.append({
                     "type": "futures",
                     "instrument": "ETH",
-                    "lot_size": settings.get("eth_futures_lot_size", settings.get("eth_lot_size", 1))
+                    "lot_size": settings.get("eth_futures_lot_size", 1)
                 })
-            # Only add options if: user enabled AND (alert says options OR both)
             if settings.get("eth_options_enabled", False) and alert_strategy_type in ["options", "both"]:
                 strategies_to_execute.append({
                     "type": "options",
