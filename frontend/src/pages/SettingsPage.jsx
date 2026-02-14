@@ -32,13 +32,22 @@ export default function SettingsPage() {
     const [connecting, setConnecting] = useState(false);
     const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
     
-    // Trading settings
+    // Trading settings - 4 Strategy Configuration
     const [instruments, setInstruments] = useState(['BTC', 'ETH']);
-    const [tradeFutures, setTradeFutures] = useState(true);
-    const [tradeOptions, setTradeOptions] = useState(false);
-    const [btcLotSize, setBtcLotSize] = useState(1);
-    const [ethLotSize, setEthLotSize] = useState(1);
-    const [contractQuantity, setContractQuantity] = useState(1);
+    // BTC Strategies
+    const [btcFuturesEnabled, setBtcFuturesEnabled] = useState(true);
+    const [btcFuturesLotSize, setBtcFuturesLotSize] = useState(1);
+    const [btcOptionsEnabled, setBtcOptionsEnabled] = useState(false);
+    const [btcOptionsLotSize, setBtcOptionsLotSize] = useState(1);
+    // ETH Strategies
+    const [ethFuturesEnabled, setEthFuturesEnabled] = useState(true);
+    const [ethFuturesLotSize, setEthFuturesLotSize] = useState(1);
+    const [ethOptionsEnabled, setEthOptionsEnabled] = useState(false);
+    const [ethOptionsLotSize, setEthOptionsLotSize] = useState(1);
+    // Options Settings
+    const [optionsStrikeSelection, setOptionsStrikeSelection] = useState('atm');
+    const [optionsExpiry, setOptionsExpiry] = useState('weekly');
+    // General Settings
     const [profitPercentage, setProfitPercentage] = useState(75);
     const [exitHalfPosition, setExitHalfPosition] = useState(false);
     const [subscriberType, setSubscriberType] = useState('wolffs_alerts');
