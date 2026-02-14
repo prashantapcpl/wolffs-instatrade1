@@ -168,6 +168,8 @@ export default function SettingsPage() {
                 instruments,
                 trade_futures: tradeFutures,
                 trade_options: tradeOptions,
+                btc_lot_size: btcLotSize,
+                eth_lot_size: ethLotSize,
                 contract_quantity: contractQuantity,
                 profit_percentage: profitPercentage,
                 exit_half_position: exitHalfPosition,
