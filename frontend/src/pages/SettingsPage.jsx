@@ -624,21 +624,37 @@ export default function SettingsPage() {
                         <Separator className="bg-white/10" />
 
                         {/* Contract Quantity */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
-                                    Contract Quantity
+                                    BTC Lot Size
                                 </Label>
                                 <Input
                                     type="number"
                                     min="1"
-                                    value={contractQuantity}
-                                    onChange={(e) => setContractQuantity(parseInt(e.target.value) || 1)}
-                                    data-testid="quantity-input"
+                                    value={btcLotSize}
+                                    onChange={(e) => setBtcLotSize(parseInt(e.target.value) || 1)}
+                                    data-testid="btc-lot-input"
                                     className="input-dark"
                                 />
                                 <p className="text-gray-500 text-xs">
-                                    Number of contracts per trade
+                                    Contracts per BTC trade
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
+                                    ETH Lot Size
+                                </Label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    value={ethLotSize}
+                                    onChange={(e) => setEthLotSize(parseInt(e.target.value) || 1)}
+                                    data-testid="eth-lot-input"
+                                    className="input-dark"
+                                />
+                                <p className="text-gray-500 text-xs">
+                                    Contracts per ETH trade
                                 </p>
                             </div>
                             <div className="space-y-2">
@@ -655,7 +671,7 @@ export default function SettingsPage() {
                                     className="input-dark"
                                 />
                                 <p className="text-gray-500 text-xs">
-                                    Auto book profit at this percentage (Phase 1B)
+                                    Auto book profit at this % (Phase 1B)
                                 </p>
                             </div>
                         </div>
