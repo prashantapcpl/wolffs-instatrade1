@@ -20,9 +20,9 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - Trading settings configuration
 - Performance reports (Phase 1C)
 
-## What's Been Implemented (Phase 1A MVP) - Feb 13, 2026
+## What's Been Implemented
 
-### Backend APIs
+### Phase 1A MVP - Feb 13, 2026
 - ✅ User Registration/Login with JWT authentication
 - ✅ Delta Exchange connection and status check
 - ✅ TradingView webhook receiver (`/api/webhook/tradingview`)
@@ -30,8 +30,6 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - ✅ Alerts storage and retrieval
 - ✅ Trading settings CRUD operations
 - ✅ Background trade execution for alerts
-
-### Frontend Pages
 - ✅ Login/Register page with split-screen design
 - ✅ Dashboard with 2-window layout (Broker Status + Alerts)
 - ✅ Settings page with Delta Exchange connection form
@@ -39,21 +37,27 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - ✅ Welcome modal for new users
 - ✅ Dark theme with neon green accents
 
-### Trading Features
-- ✅ BTC/ETH instrument selection
-- ✅ Futures trading mode toggle
-- ✅ Contract quantity configuration
-- ✅ Profit percentage target setting
-- ✅ Half-position exit option
-- ✅ Webhook URL display for TradingView setup
+### Phase 1A Enhancements - Feb 14, 2026
+- ✅ 4-Strategy Configuration (BTC/ETH Futures/Options with separate toggles & lot sizes)
+- ✅ Webhook routing via `strategy` field (futures, options, both)
+- ✅ Admin Panel with user deletion & text customization
+- ✅ Password change feature & visibility toggles on login
+- ✅ Dashboard header with subscription info
+- ✅ Static IP display (`104.198.214.223`) for Delta Exchange whitelisting
+- ✅ Webhook setup guide in settings page
+
+### Critical Bug Fixes - Feb 14, 2026
+- ✅ **Fixed Backend Crash** - Syntax error at line 281 (orphan `})` bracket)
+- ✅ **Fixed Duplicate Trades** - Implemented MongoDB-based deduplication with `alert_locks` collection and TTL index
+- ✅ **Fixed Position Reversal** - Added logic to close opposite positions before opening new ones
+- ✅ **Fixed Cross-Instrument Contamination** - ETH signals only trigger ETH trades, BTC only BTC
+- ✅ **Fixed Plain-Text Webhooks** - Now strictly requires JSON format with `symbol` and `action` fields
+- ✅ **Fixed Dashboard Refresh Button** - Now working correctly
 
 ## Prioritized Backlog
 
-### P0 - Critical (Phase 1B)
-- [ ] Options trading integration (OTM 2-3 strikes)
-- [ ] Position reversal logic (close opposite on new signal)
-- [ ] Auto profit booking at configured percentage
-- [ ] Expiry selection based on liquidity
+### P0 - Critical (In Progress)
+- [ ] BTC Options trading debugging - Not fully working yet
 
 ### P1 - High Priority (Phase 1C)
 - [ ] Performance reports (12hr/24hr/1week/1month/3month)
@@ -72,9 +76,8 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 ### P3 - Nice to Have
 - [ ] Mobile OTP verification
 - [ ] Razorpay payment integration
-- [ ] Multi-user subscription model
 - [ ] Email/SMS notifications
-- [ ] WebSocket for real-time updates
+- [ ] WebSocket auto-refresh improvements
 
 ## Technical Architecture
 - **Frontend**: React 19 + Tailwind CSS + Shadcn/UI
@@ -82,26 +85,82 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - **Auth**: JWT with localStorage
 - **Broker**: Delta Exchange API (HMAC-SHA256 signatures)
 - **Webhook**: POST /api/webhook/tradingview
+- **Static IP**: 104.198.214.223 (for Delta Exchange whitelisting)
 
 ## API Endpoints
 ```
+Auth:
 POST /api/auth/register - User registration
 POST /api/auth/login - User login
 GET  /api/auth/me - Get current user
+POST /api/auth/change-password - Change user password
+
+Delta Exchange:
 POST /api/delta/connect - Connect Delta Exchange
 GET  /api/delta/status - Get connection status
 DELETE /api/delta/disconnect - Disconnect Delta Exchange
+DELETE /api/delta/clear-credentials - Remove saved credentials
+POST /api/delta/reconnect - Reconnect with saved credentials
+GET  /api/delta/products - Get available products
+
+Settings:
 GET  /api/settings - Get trading settings
 PUT  /api/settings - Update trading settings
-POST /api/webhook/tradingview - Receive TradingView alerts
-GET  /api/alerts - Get all alerts
+
+Webhooks:
+POST /api/webhook/tradingview - Admin webhook (WolffsInsta subscribers)
+POST /api/webhook/user/{webhook_id} - User-specific webhook (Custom strategy)
+GET  /api/webhook/info - Get webhook setup info
+
+Alerts & Trades:
+GET  /api/alerts - Get user's alerts
 GET  /api/alerts/recent - Get recent alerts (public)
 GET  /api/trades - Get user's trades
-GET  /api/webhook/info - Get webhook setup info
+
+Admin:
+GET  /api/admin/users - Get all users
+PUT  /api/admin/user/{user_id}/subscription - Update subscription
+PUT  /api/admin/user/{user_id}/extend - Extend subscription
+DELETE /api/admin/user/{user_id} - Delete user
+GET  /api/admin/plans - Get plan configurations
+PUT  /api/admin/plans - Update plan configurations
+GET  /api/admin/welcome - Get welcome message config
+PUT  /api/admin/welcome - Update welcome message config
+
+Subscription:
+GET  /api/plans - Get available plans
+POST /api/subscription/start-trial - Start free trial
+GET  /api/subscription/status - Get subscription status
+
+Config:
+GET  /api/config/welcome - Get welcome message (public)
 ```
 
+## Webhook Format
+```json
+{
+  "symbol": "BTCUSD",       // Required: BTCUSD or ETHUSD
+  "action": "BUY",          // Required: BUY or SELL
+  "strategy": "futures",    // Optional: futures, options, or both (default)
+  "price": 95000,           // Optional
+  "message": "Long signal"  // Optional
+}
+```
+
+## Database Collections
+- `users` - User accounts with credentials, subscription, trading settings
+- `alerts` - Trade alerts received via webhooks
+- `trades` - Executed trades history
+- `config` - App configuration (plans, welcome message)
+- `alert_locks` - Webhook deduplication locks (TTL: 5 minutes)
+
+## Test Credentials
+- **Admin**: Mobile `9999999999`, Password `admin@wolffs2024`
+
+## Mocked Integrations
+- Payment gateway for subscriptions (use admin panel for manual subscription management)
+
 ## Next Tasks
-1. Implement options trading with OTM strike selection
-2. Add position reversal logic
-3. Build auto profit booking system
-4. Create performance reports with PDF export
+1. Debug BTC Options trading
+2. Implement PDF Performance Reports
+3. Add trade history with P&L calculation
