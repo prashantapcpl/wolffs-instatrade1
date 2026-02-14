@@ -698,19 +698,35 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
     return {"status": "received", "alert_id": alert_id, "symbol": symbol, "action": action}
 
 async def execute_trades_for_alert(alert: dict):
-    """Background task to execute trades for all subscribed users"""
+    """Background task to execute trades for subscribed users"""
     symbol = alert["symbol"]
     action = alert["action"]
+    source = alert.get("source", "wolffs_alerts")
+    source_id = alert.get("source_id", "admin")
     
     # Clean up symbol - remove .P suffix and other variations
     # BTCUSD.P -> BTC, ETHUSD.P -> ETH
     clean_symbol = symbol.upper().replace(".P", "").replace("USD", "").replace("USDT", "").replace("PERP", "")
-    logger.info(f"Processing trade for symbol: {symbol} -> cleaned: {clean_symbol}, action: {action}")
+    logger.info(f"Processing trade for symbol: {symbol} -> cleaned: {clean_symbol}, action: {action}, source: {source}")
     
-    # Find users with Delta credentials and matching instrument settings
-    users = await db.users.find({
-        "delta_credentials": {"$ne": None}
-    }, {"_id": 0}).to_list(1000)
+    # Find users based on alert source
+    if source == "wolffs_alerts":
+        # Admin alerts go to all WolffsInsta Alert subscribers
+        users = await db.users.find({
+            "delta_credentials": {"$ne": None},
+            "trading_settings.subscriber_type": "wolffs_alerts"
+        }, {"_id": 0}).to_list(1000)
+        logger.info(f"Found {len(users)} WolffsInsta Alert subscribers")
+    elif source == "custom_strategy":
+        # Custom strategy alerts go only to the specific user
+        users = await db.users.find({
+            "id": source_id,
+            "delta_credentials": {"$ne": None}
+        }, {"_id": 0}).to_list(1)
+        logger.info(f"Found {len(users)} custom strategy user(s) for user_id: {source_id}")
+    else:
+        logger.warning(f"Unknown alert source: {source}")
+        return
     
     for user in users:
         settings = user.get("trading_settings", {})
