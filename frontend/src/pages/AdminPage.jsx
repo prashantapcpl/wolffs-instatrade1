@@ -22,11 +22,14 @@ export default function AdminPage() {
     const { user } = useAuth();
     const [users, setUsers] = useState([]);
     const [plans, setPlans] = useState({});
+    const [welcomeConfig, setWelcomeConfig] = useState({});
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
+    const [userToDelete, setUserToDelete] = useState(null);
     const [extendDays, setExtendDays] = useState(7);
     const [savingPlans, setSavingPlans] = useState(false);
+    const [savingWelcome, setSavingWelcome] = useState(false);
 
     useEffect(() => {
         if (!user?.is_admin) {
@@ -39,12 +42,14 @@ export default function AdminPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [usersRes, plansRes] = await Promise.all([
+            const [usersRes, plansRes, welcomeRes] = await Promise.all([
                 axios.get(`${API_URL}/api/admin/users`),
-                axios.get(`${API_URL}/api/admin/plans`)
+                axios.get(`${API_URL}/api/admin/plans`),
+                axios.get(`${API_URL}/api/admin/welcome`).catch(() => ({ data: { welcome: {} } }))
             ]);
             setUsers(usersRes.data.users || []);
             setPlans(plansRes.data.plans || {});
+            setWelcomeConfig(welcomeRes.data.welcome || {});
         } catch (error) {
             console.error('Failed to fetch data:', error);
             if (error.response?.status === 403) {
