@@ -227,13 +227,26 @@ export default function SubscriptionPage() {
                             Wolffs Insta AutoTrade
                         </h1>
                     </div>
-                    <Button
-                        variant="ghost"
-                        onClick={logout}
-                        className="text-gray-400 hover:text-white"
-                    >
-                        Logout
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        {user?.is_admin && (
+                            <Button
+                                variant="outline"
+                                onClick={() => navigate('/admin')}
+                                className="text-neon-green border-neon-green/50 hover:bg-neon-green/10"
+                                data-testid="admin-panel-btn"
+                            >
+                                <Shield className="w-4 h-4 mr-2" />
+                                Admin Panel
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            onClick={logout}
+                            className="text-gray-400 hover:text-white"
+                        >
+                            Logout
+                        </Button>
+                    </div>
                 </div>
             </header>
 
