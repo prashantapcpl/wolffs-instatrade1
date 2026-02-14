@@ -509,6 +509,64 @@ export default function AdminPage() {
                             </Button>
                         </CardContent>
                     </Card>
+
+                    {/* Welcome Message Configuration */}
+                    <Card className="card-dark lg:col-span-3">
+                        <CardHeader className="border-b border-white/10">
+                            <CardTitle className="text-lg font-headings text-white uppercase flex items-center gap-2">
+                                <MessageSquare className="w-5 h-5 text-neon-green" />
+                                Welcome Message Settings
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-gray-400 text-xs">Welcome Title</Label>
+                                    <Input
+                                        value={welcomeConfig.title || ''}
+                                        onChange={(e) => updateWelcomeField('title', e.target.value)}
+                                        className="input-dark"
+                                        placeholder="Welcome to Wolffs AutoTrade!"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-gray-400 text-xs">Button Text</Label>
+                                    <Input
+                                        value={welcomeConfig.button_text || ''}
+                                        onChange={(e) => updateWelcomeField('button_text', e.target.value)}
+                                        className="input-dark"
+                                        placeholder="Got it, Let's Go!"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-gray-400 text-xs">Description</Label>
+                                <Textarea
+                                    value={welcomeConfig.description || ''}
+                                    onChange={(e) => updateWelcomeField('description', e.target.value)}
+                                    className="input-dark min-h-[80px]"
+                                    placeholder="Your automated trading dashboard is ready. To get started:"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-gray-400 text-xs">Steps (one per line)</Label>
+                                <Textarea
+                                    value={(welcomeConfig.steps || []).join('\n')}
+                                    onChange={(e) => updateWelcomeField('steps', e.target.value.split('\n').filter(s => s.trim()))}
+                                    className="input-dark min-h-[100px]"
+                                    placeholder="Connect your Delta Exchange account&#10;Configure your trading instruments&#10;Set up TradingView webhook"
+                                />
+                            </div>
+                            <Button
+                                onClick={handleSaveWelcome}
+                                disabled={savingWelcome}
+                                className="btn-primary w-full"
+                            >
+                                <Save className="w-4 h-4 mr-2" />
+                                {savingWelcome ? 'Saving...' : 'Save Welcome Message'}
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </main>
         </div>
