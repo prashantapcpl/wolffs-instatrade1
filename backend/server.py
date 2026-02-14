@@ -1280,12 +1280,6 @@ async def execute_trades_for_alert(alert: dict):
                     
         except Exception as e:
             logger.error(f"Trade execution failed for user {user['id']}: {e}")
-                    "error": str(order_err),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                })
-            
-        except Exception as e:
-            logger.error(f"Failed to execute trade for user {user['id']}: {e}")
 
 # ======================= ALERTS ROUTES =======================
 
