@@ -682,6 +682,96 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* Change Password */}
+                <Card className="card-dark">
+                    <CardHeader>
+                        <CardTitle className="text-lg font-headings text-white uppercase flex items-center gap-2">
+                            <Key className="w-5 h-5 text-neon-green" />
+                            Change Password
+                        </CardTitle>
+                        <CardDescription className="text-gray-500">
+                            Update your account password
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
+                                Current Password
+                            </Label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                <Input
+                                    type={showCurrentPassword ? "text" : "password"}
+                                    placeholder="Enter current password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    className="input-dark pl-10 pr-10"
+                                    data-testid="current-password-input"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                >
+                                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
+                                    New Password
+                                </Label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                    <Input
+                                        type={showNewPassword ? "text" : "password"}
+                                        placeholder="Enter new password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="input-dark pl-10 pr-10"
+                                        data-testid="new-password-input"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                    >
+                                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
+                                    Confirm New Password
+                                </Label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                    <Input
+                                        type={showNewPassword ? "text" : "password"}
+                                        placeholder="Confirm new password"
+                                        value={confirmNewPassword}
+                                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                        className="input-dark pl-10 pr-10"
+                                        data-testid="confirm-new-password-input"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <Button
+                            onClick={handleChangePassword}
+                            disabled={changingPassword}
+                            className="btn-primary"
+                            data-testid="change-password-btn"
+                        >
+                            <Key className="w-4 h-4 mr-2" />
+                            {changingPassword ? 'Changing...' : 'Change Password'}
+                        </Button>
+                    </CardContent>
+                </Card>
+
                 {/* Webhook Info */}
                 <Card className="card-dark">
                     <CardHeader>
