@@ -414,6 +414,38 @@ export default function SettingsPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
+                                {/* IMPORTANT: Whitelisted IP Notice */}
+                                <div className="p-4 bg-neon-green-dim rounded-sm border border-neon-green/30">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 bg-neon-green rounded-md flex items-center justify-center flex-shrink-0">
+                                            <Shield className="w-4 h-4 text-black" />
+                                        </div>
+                                        <div>
+                                            <p className="text-neon-green font-medium">Important: Whitelist This IP in Delta Exchange</p>
+                                            <p className="text-gray-300 text-sm mt-1">
+                                                Before connecting, add this IP to your Delta Exchange API whitelist:
+                                            </p>
+                                            <div className="mt-2 p-2 bg-obsidian rounded-sm border border-neon-green/20 flex items-center justify-between">
+                                                <code className="text-neon-green font-mono text-lg">104.198.214.223</code>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText('104.198.214.223');
+                                                        toast.success('IP copied to clipboard!');
+                                                    }}
+                                                    className="text-neon-green hover:bg-neon-green/10"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            <p className="text-gray-500 text-xs mt-2">
+                                                This is a permanent static IP. Add it once during API key creation.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-gray-300 font-mono text-xs uppercase tracking-wider">
