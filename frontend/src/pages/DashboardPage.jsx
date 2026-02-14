@@ -132,8 +132,18 @@ export default function DashboardPage() {
         setLoading(false);
     }, [fetchDeltaStatus, fetchAlerts]);
 
+    const fetchWelcomeConfig = useCallback(async () => {
+        try {
+            const response = await axios.get(`${API_URL}/api/config/welcome`);
+            setWelcomeConfig(response.data.welcome);
+        } catch (error) {
+            console.error('Failed to fetch welcome config:', error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchData();
+        fetchWelcomeConfig();
         connectWebSocket();
         
         // Check if first login
@@ -152,7 +162,7 @@ export default function DashboardPage() {
                 clearTimeout(reconnectTimeoutRef.current);
             }
         };
-    }, [fetchData, connectWebSocket]);
+    }, [fetchData, fetchWelcomeConfig, connectWebSocket]);
 
     const handleRefresh = async () => {
         setRefreshing(true);
