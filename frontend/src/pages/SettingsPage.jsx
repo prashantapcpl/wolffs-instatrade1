@@ -36,6 +36,8 @@ export default function SettingsPage() {
     const [instruments, setInstruments] = useState(['BTC', 'ETH']);
     const [tradeFutures, setTradeFutures] = useState(true);
     const [tradeOptions, setTradeOptions] = useState(false);
+    const [btcLotSize, setBtcLotSize] = useState(1);
+    const [ethLotSize, setEthLotSize] = useState(1);
     const [contractQuantity, setContractQuantity] = useState(1);
     const [profitPercentage, setProfitPercentage] = useState(75);
     const [exitHalfPosition, setExitHalfPosition] = useState(false);
