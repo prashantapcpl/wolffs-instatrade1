@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { 
     Zap, Users, User, Check, X, Clock, Crown,
-    ArrowRight, Sparkles
+    ArrowRight, Sparkles, Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 
