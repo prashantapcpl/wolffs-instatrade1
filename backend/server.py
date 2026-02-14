@@ -461,6 +461,164 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         })
     }
 
+# ======================= SUBSCRIPTION ROUTES =======================
+
+@api_router.get("/plans")
+async def get_plans():
+    """Get available subscription plans (public)"""
+    plans = await get_plan_config()
+    return {"plans": plans}
+
+@api_router.post("/subscription/start-trial")
+async def start_trial(plan_type: str, current_user: dict = Depends(get_current_user)):
+    """Start a free trial for a plan"""
+    if plan_type not in ["wolffs_alerts", "custom_strategy"]:
+        raise HTTPException(status_code=400, detail="Invalid plan type")
+    
+    # Check if user already had a trial
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+    subscription = user.get("subscription", {})
+    
+    if subscription.get("status") in ["active", "trial"]:
+        # Check if same plan
+        if subscription.get("plan_type") == plan_type:
+            raise HTTPException(status_code=400, detail="You already have an active subscription for this plan")
+    
+    # Get plan config for trial days
+    plans = await get_plan_config()
+    plan_config = plans.get(plan_type, {})
+    trial_days = plan_config.get("trial_days", 2)
+    
+    # Start trial
+    now = datetime.now(timezone.utc)
+    expiry = now + timedelta(days=trial_days)
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {
+            "subscription": {
+                "plan_type": plan_type,
+                "status": "trial",
+                "start_date": now.isoformat(),
+                "expiry_date": expiry.isoformat(),
+                "is_trial": True
+            },
+            "trading_settings.subscriber_type": plan_type
+        }}
+    )
+    
+    return {
+        "message": "Trial started successfully",
+        "plan_type": plan_type,
+        "expiry_date": expiry.isoformat(),
+        "trial_days": trial_days
+    }
+
+@api_router.get("/subscription/status")
+async def get_subscription_status(current_user: dict = Depends(get_current_user)):
+    """Get current subscription status"""
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+    subscription = user.get("subscription", {})
+    
+    # Check if expired
+    if subscription.get("expiry_date"):
+        expiry = datetime.fromisoformat(subscription["expiry_date"].replace('Z', '+00:00'))
+        if expiry < datetime.now(timezone.utc):
+            subscription["status"] = "expired"
+            await db.users.update_one(
+                {"id": current_user["id"]},
+                {"$set": {"subscription.status": "expired"}}
+            )
+    
+    return {"subscription": subscription}
+
+# ======================= ADMIN ROUTES =======================
+
+async def verify_admin(current_user: dict = Depends(get_current_user)):
+    """Verify user is admin"""
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+    if not user.get("is_admin", False):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+@api_router.get("/admin/users")
+async def admin_get_users(admin: dict = Depends(verify_admin)):
+    """Get all users (admin only)"""
+    users = await db.users.find({}, {"_id": 0, "password": 0, "delta_credentials.api_secret": 0}).to_list(1000)
+    return {"users": users}
+
+@api_router.put("/admin/user/{user_id}/subscription")
+async def admin_update_subscription(user_id: str, plan_type: str, days: int, status: str = "active", admin: dict = Depends(verify_admin)):
+    """Update user subscription (admin only)"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    now = datetime.now(timezone.utc)
+    expiry = now + timedelta(days=days)
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "subscription": {
+                "plan_type": plan_type,
+                "status": status,
+                "start_date": now.isoformat(),
+                "expiry_date": expiry.isoformat(),
+                "is_trial": status == "trial"
+            },
+            "trading_settings.subscriber_type": plan_type
+        }}
+    )
+    
+    return {"message": "Subscription updated", "expiry_date": expiry.isoformat()}
+
+@api_router.put("/admin/user/{user_id}/extend")
+async def admin_extend_subscription(user_id: str, days: int, admin: dict = Depends(verify_admin)):
+    """Extend user subscription by days (admin only)"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    subscription = user.get("subscription", {})
+    current_expiry = subscription.get("expiry_date")
+    
+    if current_expiry:
+        expiry = datetime.fromisoformat(current_expiry.replace('Z', '+00:00'))
+        # If already expired, extend from now
+        if expiry < datetime.now(timezone.utc):
+            expiry = datetime.now(timezone.utc)
+    else:
+        expiry = datetime.now(timezone.utc)
+    
+    new_expiry = expiry + timedelta(days=days)
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "subscription.expiry_date": new_expiry.isoformat(),
+            "subscription.status": "active" if subscription.get("status") == "expired" else subscription.get("status", "active")
+        }}
+    )
+    
+    return {"message": f"Subscription extended by {days} days", "new_expiry_date": new_expiry.isoformat()}
+
+@api_router.get("/admin/plans")
+async def admin_get_plans(admin: dict = Depends(verify_admin)):
+    """Get plan configurations (admin only)"""
+    plans = await get_plan_config()
+    return {"plans": plans}
+
+@api_router.put("/admin/plans")
+async def admin_update_plans(plans: dict, admin: dict = Depends(verify_admin)):
+    """Update plan configurations (admin only)"""
+    await db.config.update_one(
+        {"type": "plans"},
+        {"$set": {"plans": plans, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Plans updated successfully"}
+
 # ======================= DELTA EXCHANGE ROUTES =======================
 
 @api_router.post("/delta/connect")
