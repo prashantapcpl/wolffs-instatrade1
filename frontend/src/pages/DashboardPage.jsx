@@ -266,15 +266,6 @@ export default function DashboardPage() {
                     </Card>
                 </div>
             )}
-                                data-testid="welcome-dismiss-btn"
-                                className="w-full btn-primary"
-                            >
-                                Got it, Let's Go!
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
 
             {/* Header */}
             <header className="border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-40">
