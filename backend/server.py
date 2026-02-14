@@ -1083,18 +1083,45 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         logger.warning(f"Alert rejected: Invalid action {action}")
         return {"status": "rejected", "reason": f"Invalid action: {action}. Use BUY or SELL."}
     
-    # STRICT DEDUPLICATION: Check if identical alert exists within last 30 seconds
+    # ROBUST DEDUPLICATION using database lock
+    # Create a unique key for this alert type
+    dedup_key = f"{instrument}_{action}_{source}"
+    current_minute = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")  # Minute-level granularity
+    
+    # Try to insert a dedup lock - if it exists, this is a duplicate
+    try:
+        await db.alert_locks.insert_one({
+            "key": dedup_key,
+            "minute": current_minute,
+            "created_at": datetime.now(timezone.utc)
+        })
+        logger.info(f"New alert lock created: {dedup_key} at {current_minute}")
+    except Exception as lock_error:
+        # Duplicate key error means alert already processed this minute
+        if "duplicate" in str(lock_error).lower() or "E11000" in str(lock_error):
+            logger.info(f"Duplicate alert blocked by lock: {dedup_key} at {current_minute}")
+            # Find the existing alert
+            existing = await db.alerts.find_one({
+                "instrument": instrument,
+                "action": action,
+                "source": source,
+                "timestamp": {"$regex": f"^{current_minute}"}
+            }, {"_id": 0})
+            return {"status": "duplicate_ignored", "alert_id": existing.get("id") if existing else "locked"}
+        else:
+            logger.warning(f"Lock insert error (proceeding): {lock_error}")
+    
+    # Also check for recent alerts as backup
     thirty_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=30)).isoformat()
     existing_alert = await db.alerts.find_one({
         "instrument": instrument,
         "action": action,
         "source": source,
         "timestamp": {"$gte": thirty_seconds_ago}
-    })
+    }, {"_id": 0})
     
     if existing_alert:
-        logger.info(f"Duplicate alert ignored: {instrument} {action} (existing ID: {existing_alert.get('id')})")
-        return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
+        logger.info(f"Duplicate alert ignored (time check): {instrument} {action}")
         return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
     
     # Create alert record
