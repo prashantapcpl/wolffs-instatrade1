@@ -351,7 +351,7 @@ export default function DashboardPage() {
                             <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider">
-                                        Broker Status
+                                        Crypto Broker Status
                                     </CardTitle>
                                     <ChevronRight className="w-4 h-4 text-gray-500" />
                                 </div>
@@ -398,6 +398,36 @@ export default function DashboardPage() {
                                         Click to connect your Delta Exchange account
                                     </p>
                                 )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Stocks / MCX / Forex Broker Status */}
+                        <Card className="card-dark">
+                            <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-mono text-gray-500 uppercase tracking-wider">
+                                        Stocks / MCX / Forex Brokers Status
+                                    </CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {['Zerodha', 'AngelOne', 'Fyers', 'IIFL', 'Upstox'].map((broker) => (
+                                        <div key={broker} className="flex items-center gap-3 opacity-50">
+                                            <div className="status-indicator status-disconnected" />
+                                            <span className="text-gray-400 text-sm">{broker}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-4 p-3 bg-obsidian rounded-sm border border-white/10 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-neon-green">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="text-sm font-medium">Coming Soon</span>
+                                    </div>
+                                    <p className="text-gray-500 text-xs mt-1">
+                                        Stock broker integrations in next upgrade
+                                    </p>
+                                </div>
                             </CardContent>
                         </Card>
 
