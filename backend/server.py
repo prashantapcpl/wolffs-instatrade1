@@ -103,6 +103,13 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
     created_at: str
 
+class SubscriptionPlan(BaseModel):
+    plan_type: str  # "wolffs_alerts" or "custom_strategy"
+    status: str = "inactive"  # "inactive", "trial", "active", "expired"
+    start_date: Optional[str] = None
+    expiry_date: Optional[str] = None
+    is_trial: bool = False
+
 class DeltaCredentials(BaseModel):
     api_key: str
     api_secret: str
