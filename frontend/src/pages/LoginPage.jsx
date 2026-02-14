@@ -255,13 +255,20 @@ export default function LoginPage() {
                                                 <Input
                                                     id="reg-password"
                                                     data-testid="register-password-input"
-                                                    type="password"
+                                                    type={showRegPassword ? "text" : "password"}
                                                     placeholder="Create password (min 6 chars)"
                                                     value={regPassword}
                                                     onChange={(e) => setRegPassword(e.target.value)}
-                                                    className="input-dark pl-10"
+                                                    className="input-dark pl-10 pr-10"
                                                     required
                                                 />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowRegPassword(!showRegPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                                >
+                                                    {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -273,13 +280,20 @@ export default function LoginPage() {
                                                 <Input
                                                     id="reg-confirm"
                                                     data-testid="register-confirm-input"
-                                                    type="password"
+                                                    type={showRegConfirmPassword ? "text" : "password"}
                                                     placeholder="Confirm password"
                                                     value={regConfirmPassword}
                                                     onChange={(e) => setRegConfirmPassword(e.target.value)}
-                                                    className="input-dark pl-10"
+                                                    className="input-dark pl-10 pr-10"
                                                     required
                                                 />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                                >
+                                                    {showRegConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
                                             </div>
                                         </div>
                                         <Button
