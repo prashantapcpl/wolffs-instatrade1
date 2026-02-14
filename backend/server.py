@@ -126,15 +126,30 @@ class DeltaConnectionStatus(BaseModel):
 
 class TradingSettings(BaseModel):
     instruments: List[str] = ["BTC", "ETH"]
-    trade_futures: bool = True
-    trade_options: bool = False
-    btc_lot_size: int = 1  # Separate lot size for BTC
-    eth_lot_size: int = 1  # Separate lot size for ETH
-    contract_quantity: int = 1  # Legacy field - will use instrument-specific
+    # BTC Strategy Settings
+    btc_futures_enabled: bool = True
+    btc_futures_lot_size: int = 1
+    btc_options_enabled: bool = False
+    btc_options_lot_size: int = 1
+    # ETH Strategy Settings
+    eth_futures_enabled: bool = True
+    eth_futures_lot_size: int = 1
+    eth_options_enabled: bool = False
+    eth_options_lot_size: int = 1
+    # Options Settings (when options are enabled)
+    options_strike_selection: str = "atm"  # "atm", "otm_1", "otm_2" (1 or 2 strikes OTM)
+    options_expiry: str = "weekly"  # "weekly" or "monthly"
+    # General Settings
     profit_percentage: float = 75.0
     exit_half_position: bool = False
     subscriber_type: str = "wolffs_alerts"  # "wolffs_alerts" or "custom_strategy"
     webhook_id: Optional[str] = None  # Unique webhook ID for custom_strategy users
+    # Legacy fields for backward compatibility
+    trade_futures: bool = True
+    trade_options: bool = False
+    btc_lot_size: int = 1
+    eth_lot_size: int = 1
+    contract_quantity: int = 1
 
 class TradingViewAlert(BaseModel):
     symbol: str
