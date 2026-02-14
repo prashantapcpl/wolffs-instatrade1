@@ -35,7 +35,8 @@ export default function LoginPage() {
         try {
             await login(loginMobile, loginPassword);
             toast.success('Welcome back!');
-            navigate('/dashboard');
+            // Navigate to subscription page first - it will redirect to dashboard if user has active subscription
+            navigate('/subscription');
         } catch (error) {
             toast.error(error.response?.data?.detail || 'Login failed');
         } finally {
@@ -64,7 +65,8 @@ export default function LoginPage() {
         try {
             await register(regMobile, regPassword, regName);
             toast.success('Account created successfully!');
-            navigate('/dashboard');
+            // Navigate to subscription page for new users to select a plan
+            navigate('/subscription');
         } catch (error) {
             toast.error(error.response?.data?.detail || 'Registration failed');
         } finally {
