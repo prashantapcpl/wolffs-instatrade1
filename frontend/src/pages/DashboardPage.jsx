@@ -10,7 +10,7 @@ import {
     Zap, Settings, LogOut, Bell, Wallet, 
     TrendingUp, TrendingDown, Activity, 
     ChevronRight, RefreshCw, ExternalLink,
-    Wifi, WifiOff, Shield, Clock
+    Wifi, WifiOff, Shield, Clock, User, Phone, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
 
