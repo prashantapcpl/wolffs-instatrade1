@@ -1037,12 +1037,18 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
     action = "UNKNOWN"
     price = None
     message = ""
+    strategy_type = "both"  # Default: execute on all enabled strategies
     
     if isinstance(body, dict):
         symbol = str(body.get("symbol", body.get("ticker", "UNKNOWN"))).upper()
         action = str(body.get("action", body.get("strategy.order.action", ""))).upper()
         price = body.get("price", body.get("close"))
         message = str(body.get("message", body.get("comment", "")))
+        # NEW: Get strategy type from webhook payload
+        # Accepts: "futures", "options", "both" (default)
+        strategy_type = str(body.get("strategy", body.get("product", body.get("type", "both")))).lower()
+        if strategy_type not in ["futures", "options", "both"]:
+            strategy_type = "both"
     
     # Normalize action
     if action in ["BUY", "LONG", "ENTRY_LONG"]:
