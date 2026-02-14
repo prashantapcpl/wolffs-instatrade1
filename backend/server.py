@@ -105,7 +105,7 @@ class UserResponse(BaseModel):
 
 class SubscriptionPlan(BaseModel):
     plan_type: str  # "wolffs_alerts" or "custom_strategy"
-    status: str = "inactive"  # "inactive", "trial", "active", "expired"
+    subscription_status: str = "inactive"  # "inactive", "trial", "active", "expired"
     start_date: Optional[str] = None
     expiry_date: Optional[str] = None
     is_trial: bool = False
