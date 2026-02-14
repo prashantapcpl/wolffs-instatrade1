@@ -405,6 +405,17 @@ export default function AdminPage() {
                                                                 Activate
                                                             </Button>
                                                         ) : null}
+                                                        {!u.is_admin && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => setUserToDelete(u)}
+                                                                className="text-xs text-neon-red border-neon-red/30 hover:bg-neon-red/10"
+                                                            >
+                                                                <Trash2 className="w-3 h-3 mr-1" />
+                                                                Delete
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
