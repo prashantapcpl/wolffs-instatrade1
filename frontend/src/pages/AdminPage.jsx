@@ -94,6 +94,36 @@ export default function AdminPage() {
         }
     };
 
+    const handleSaveWelcome = async () => {
+        setSavingWelcome(true);
+        try {
+            await axios.put(`${API_URL}/api/admin/welcome`, welcomeConfig);
+            toast.success('Welcome message saved');
+        } catch (error) {
+            toast.error('Failed to save welcome message');
+        } finally {
+            setSavingWelcome(false);
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        try {
+            await axios.delete(`${API_URL}/api/admin/user/${userId}`);
+            toast.success('User deleted successfully');
+            setUserToDelete(null);
+            await fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to delete user');
+        }
+    };
+
+    const updateWelcomeField = (field, value) => {
+        setWelcomeConfig(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const updatePlanField = (planType, field, value) => {
         setPlans(prev => ({
             ...prev,
