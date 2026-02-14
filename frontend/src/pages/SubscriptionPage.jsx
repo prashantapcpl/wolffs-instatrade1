@@ -55,10 +55,6 @@ export default function SubscriptionPage() {
         }
     };
 
-    const subscription = user?.subscription || {};
-    const hasActiveSubscription = subscription.status === 'active' || subscription.status === 'trial';
-    const currentPlan = subscription.plan_type;
-
     const handlePlanClick = (planType) => {
         // If user has active subscription for this plan, go to dashboard
         if (hasActiveSubscription && currentPlan === planType) {
