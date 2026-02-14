@@ -582,15 +582,31 @@ async def update_settings(settings: TradingSettings, current_user: dict = Depend
 
 # ======================= WEBHOOK ROUTES =======================
 
+# Admin webhook - for WolffsInsta Alerts subscribers
 @api_router.post("/webhook/tradingview")
 async def tradingview_webhook(request: Request, background_tasks: BackgroundTasks):
-    """Receive TradingView alerts and execute trades"""
+    """Admin webhook - alerts go to all WolffsInsta Alert subscribers"""
+    return await process_webhook(request, background_tasks, source="wolffs_alerts", source_id="admin")
+
+# User-specific webhook - for custom strategy users
+@api_router.post("/webhook/user/{webhook_id}")
+async def user_tradingview_webhook(webhook_id: str, request: Request, background_tasks: BackgroundTasks):
+    """User-specific webhook - alerts go only to this user"""
+    # Verify webhook_id belongs to a user
+    user = await db.users.find_one({"trading_settings.webhook_id": webhook_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Invalid webhook ID")
+    
+    return await process_webhook(request, background_tasks, source="custom_strategy", source_id=user["id"])
+
+async def process_webhook(request: Request, background_tasks: BackgroundTasks, source: str, source_id: str):
+    """Common webhook processing logic"""
     try:
         content_type = request.headers.get("content-type", "")
         raw_body = await request.body()
         body_text = raw_body.decode() if raw_body else ""
         
-        logger.info(f"Received TradingView webhook - Content-Type: {content_type}, Body: {body_text}")
+        logger.info(f"Received webhook [{source}] - Content-Type: {content_type}, Body: {body_text}")
         
         # Try to parse as JSON first
         body = {}
@@ -598,22 +614,17 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
             try:
                 body = json.loads(body_text)
                 if not isinstance(body, dict):
-                    # If it's not a dict (e.g., just a number or string), wrap it
                     body = {"message": str(body)}
             except json.JSONDecodeError:
-                # Not JSON, treat as plain text message
                 body_upper = body_text.strip().upper()
                 parts = body_upper.split()
                 
-                # Handle single word alerts like "BUY" or "SELL"
                 if len(parts) == 1:
                     if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
-                        # Single action word - we'll need to infer symbol from user settings
                         body = {"action": parts[0], "symbol": "BTCUSD", "inferred": True}
                     else:
                         body = {"message": body_text}
                 elif len(parts) >= 2:
-                    # Try to parse common formats like "BUY BTCUSD" or "BTCUSD BUY"
                     if parts[0] in ["BUY", "SELL", "LONG", "SHORT"]:
                         body = {"action": parts[0], "symbol": parts[1]}
                     elif parts[1] in ["BUY", "SELL", "LONG", "SHORT"]:
@@ -626,7 +637,7 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
         logger.error(f"Error parsing webhook body: {e}")
         body = {}
     
-    # Parse alert data with safe defaults
+    # Parse alert data
     symbol = "UNKNOWN"
     action = "UNKNOWN"
     price = None
@@ -649,12 +660,14 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
     existing_alert = await db.alerts.find_one({
         "symbol": symbol,
         "action": action,
+        "source": source,
+        "source_id": source_id,
         "timestamp": {"$gte": ten_seconds_ago}
     })
     
     if existing_alert:
-        logger.info(f"Duplicate alert ignored: {symbol} {action} (exists from {existing_alert.get('timestamp')})")
-        return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id"), "symbol": symbol, "action": action}
+        logger.info(f"Duplicate alert ignored: {symbol} {action}")
+        return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
     
     # Create alert record
     alert_id = str(uuid.uuid4())
@@ -662,21 +675,23 @@ async def tradingview_webhook(request: Request, background_tasks: BackgroundTask
         "id": alert_id,
         "symbol": symbol,
         "action": action,
-        "price": float(price) if price and str(price).replace('.', '').isdigit() else None,
+        "price": float(price) if price and str(price).replace('.', '').replace('-', '').isdigit() else None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "message": message,
+        "source": source,  # "wolffs_alerts" or "custom_strategy"
+        "source_id": source_id,  # "admin" or user_id
         "executed": False,
         "execution_result": None,
         "raw_data": body_text
     }
     
     await db.alerts.insert_one(alert_record)
-    logger.info(f"Alert saved: {alert_id} - {symbol} {action}")
+    logger.info(f"Alert saved: {alert_id} - {symbol} {action} [source: {source}]")
     
-    # INSTANT BROADCAST via WebSocket to all connected clients
+    # INSTANT BROADCAST via WebSocket
     await ws_manager.broadcast_alert(alert_record)
     
-    # Execute trades for all users with matching instruments
+    # Execute trades
     if action in ["BUY", "SELL"]:
         background_tasks.add_task(execute_trades_for_alert, alert_record)
     
