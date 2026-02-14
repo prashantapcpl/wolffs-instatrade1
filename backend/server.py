@@ -1147,17 +1147,19 @@ async def execute_trades_for_alert(alert: dict):
             logger.info(f"Symbol {clean_symbol} does not match any instruments: {instruments}")
             continue
         
-        # Determine which strategies to execute based on user settings
+        # Determine which strategies to execute based on user settings AND alert strategy_type
         strategies_to_execute = []
         
         if matched_instrument == "BTC" or "BTC" in clean_symbol:
-            if settings.get("btc_futures_enabled", True):
+            # Only add futures if: user enabled AND (alert says futures OR both)
+            if settings.get("btc_futures_enabled", True) and alert_strategy_type in ["futures", "both"]:
                 strategies_to_execute.append({
                     "type": "futures",
                     "instrument": "BTC",
                     "lot_size": settings.get("btc_futures_lot_size", settings.get("btc_lot_size", 1))
                 })
-            if settings.get("btc_options_enabled", False):
+            # Only add options if: user enabled AND (alert says options OR both)
+            if settings.get("btc_options_enabled", False) and alert_strategy_type in ["options", "both"]:
                 strategies_to_execute.append({
                     "type": "options",
                     "instrument": "BTC",
@@ -1167,13 +1169,15 @@ async def execute_trades_for_alert(alert: dict):
                 })
         
         if matched_instrument == "ETH" or "ETH" in clean_symbol:
-            if settings.get("eth_futures_enabled", True):
+            # Only add futures if: user enabled AND (alert says futures OR both)
+            if settings.get("eth_futures_enabled", True) and alert_strategy_type in ["futures", "both"]:
                 strategies_to_execute.append({
                     "type": "futures",
                     "instrument": "ETH",
                     "lot_size": settings.get("eth_futures_lot_size", settings.get("eth_lot_size", 1))
                 })
-            if settings.get("eth_options_enabled", False):
+            # Only add options if: user enabled AND (alert says options OR both)
+            if settings.get("eth_options_enabled", False) and alert_strategy_type in ["options", "both"]:
                 strategies_to_execute.append({
                     "type": "options",
                     "instrument": "ETH",
