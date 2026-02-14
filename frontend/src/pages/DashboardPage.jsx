@@ -585,7 +585,8 @@ export default function DashboardPage() {
                                             </div>
                                         ))}
                                     </div>
-                                )}
+                                );
+                                })()}
                             </ScrollArea>
                         </CardContent>
                     </Card>
