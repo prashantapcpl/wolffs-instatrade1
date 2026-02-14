@@ -121,7 +121,7 @@ export default function LoginPage() {
                             <Zap className="w-6 h-6 text-black" />
                         </div>
                         <h1 className="logo-text text-2xl text-white uppercase">
-                            Wolffs AutoTrade
+                            WolffsInsta Autotrade
                         </h1>
                     </div>
 
