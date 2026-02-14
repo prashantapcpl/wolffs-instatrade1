@@ -858,6 +858,134 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
+                {/* TradingView Webhook Setup Guide */}
+                <Card className="card-dark">
+                    <CardHeader>
+                        <CardTitle className="text-lg font-headings text-white uppercase flex items-center gap-2">
+                            <ExternalLink className="w-5 h-5 text-neon-green" />
+                            TradingView Webhook Setup
+                        </CardTitle>
+                        <CardDescription className="text-gray-500">
+                            How to configure your TradingView alerts for different strategies
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Webhook URL */}
+                        <div className="p-4 bg-neon-green-dim rounded-sm border border-neon-green/30">
+                            <p className="text-neon-green font-medium mb-2">Your Webhook URL:</p>
+                            <div className="p-2 bg-obsidian rounded-sm border border-neon-green/20 flex items-center justify-between">
+                                <code className="text-neon-green font-mono text-sm break-all">{getWebhookUrl()}</code>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={copyWebhook}
+                                    className="text-neon-green hover:bg-neon-green/10 ml-2 flex-shrink-0"
+                                >
+                                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Strategy Selection Guide */}
+                        <div className="space-y-4">
+                            <h4 className="text-white font-medium">Running Different Strategies</h4>
+                            <p className="text-gray-400 text-sm">
+                                Use the <code className="text-neon-green bg-surface px-1 rounded">"strategy"</code> field in your webhook message to control which product type executes:
+                            </p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="p-3 bg-surface-highlight rounded-sm border border-white/10">
+                                    <p className="text-white font-medium text-sm mb-2">Futures Only</p>
+                                    <code className="text-xs text-gray-300 block bg-obsidian p-2 rounded overflow-x-auto">
+                                        {`{"symbol": "{{ticker}}", "action": "{{strategy.order.action}}", "strategy": "futures"}`}
+                                    </code>
+                                </div>
+                                <div className="p-3 bg-surface-highlight rounded-sm border border-white/10">
+                                    <p className="text-white font-medium text-sm mb-2">Options Only</p>
+                                    <code className="text-xs text-gray-300 block bg-obsidian p-2 rounded overflow-x-auto">
+                                        {`{"symbol": "{{ticker}}", "action": "{{strategy.order.action}}", "strategy": "options"}`}
+                                    </code>
+                                </div>
+                                <div className="p-3 bg-surface-highlight rounded-sm border border-white/10">
+                                    <p className="text-white font-medium text-sm mb-2">Both (Default)</p>
+                                    <code className="text-xs text-gray-300 block bg-obsidian p-2 rounded overflow-x-auto">
+                                        {`{"symbol": "{{ticker}}", "action": "{{strategy.order.action}}", "strategy": "both"}`}
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Example: 2 Strategies on Same Instrument */}
+                        <div className="space-y-3">
+                            <h4 className="text-white font-medium">Example: 2 Different BTC Strategies</h4>
+                            <p className="text-gray-400 text-sm">
+                                To run one Pine Script strategy on BTC Futures and another on BTC Options:
+                            </p>
+                            <ol className="space-y-2 text-gray-400 text-sm">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">1.</span>
+                                    Enable both BTC Futures and BTC Options in Strategy Configuration above
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">2.</span>
+                                    Create 2 alerts in TradingView for your 2 strategies
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">3.</span>
+                                    <span>
+                                        <strong className="text-white">Strategy 1 Alert</strong> (Futures): Set message to<br/>
+                                        <code className="text-xs bg-obsidian px-1 rounded">{`{"symbol": "BTCUSD", "action": "{{strategy.order.action}}", "strategy": "futures"}`}</code>
+                                    </span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">4.</span>
+                                    <span>
+                                        <strong className="text-white">Strategy 2 Alert</strong> (Options): Set message to<br/>
+                                        <code className="text-xs bg-obsidian px-1 rounded">{`{"symbol": "BTCUSD", "action": "{{strategy.order.action}}", "strategy": "options"}`}</code>
+                                    </span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-neon-green font-mono">5.</span>
+                                    Both alerts use the same Webhook URL above
+                                </li>
+                            </ol>
+                        </div>
+
+                        {/* 4 Strategies Example */}
+                        <div className="p-4 bg-surface-highlight rounded-sm border border-white/10">
+                            <h4 className="text-white font-medium mb-3">Deploy 4 Independent Strategies</h4>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-white/10">
+                                            <th className="text-left text-gray-400 py-2">Strategy</th>
+                                            <th className="text-left text-gray-400 py-2">Webhook Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-300">
+                                        <tr className="border-b border-white/5">
+                                            <td className="py-2">BTC Futures</td>
+                                            <td className="py-2 font-mono text-xs">{`{"symbol": "BTCUSD", "action": "BUY", "strategy": "futures"}`}</td>
+                                        </tr>
+                                        <tr className="border-b border-white/5">
+                                            <td className="py-2">BTC Options</td>
+                                            <td className="py-2 font-mono text-xs">{`{"symbol": "BTCUSD", "action": "BUY", "strategy": "options"}`}</td>
+                                        </tr>
+                                        <tr className="border-b border-white/5">
+                                            <td className="py-2">ETH Futures</td>
+                                            <td className="py-2 font-mono text-xs">{`{"symbol": "ETHUSD", "action": "BUY", "strategy": "futures"}`}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="py-2">ETH Options</td>
+                                            <td className="py-2 font-mono text-xs">{`{"symbol": "ETHUSD", "action": "BUY", "strategy": "options"}`}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Change Password */}
                 <Card className="card-dark">
                     <CardHeader>
