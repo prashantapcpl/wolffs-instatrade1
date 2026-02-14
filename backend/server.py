@@ -1303,11 +1303,64 @@ async def execute_trades_for_alert(alert: dict):
                     logger.warning(f"No matching {strategy_type} product found for {instrument}")
                     continue
                 
-                # Place order
+                # POSITION REVERSAL LOGIC
+                # Step 1: Check current position for this product
+                # Step 2: If position exists in opposite direction, close it first
+                # Step 3: Then open new position
+                
                 side = "buy" if action == "BUY" else "sell"
-                logger.info(f"Placing {side} {strategy_type} order: product_id={product_id}, size={quantity}, user={user['id']}")
+                opposite_side = "sell" if action == "BUY" else "buy"
                 
                 try:
+                    # Get current positions
+                    positions = await delta_client.get_positions()
+                    current_position = None
+                    
+                    for pos in positions.get("result", []):
+                        if pos.get("product_id") == product_id or pos.get("symbol", "").upper() == product_symbol:
+                            pos_size = float(pos.get("size", 0))
+                            if pos_size != 0:
+                                current_position = {
+                                    "size": abs(pos_size),
+                                    "side": "buy" if pos_size > 0 else "sell"
+                                }
+                                logger.info(f"Current position for {product_symbol}: {current_position}")
+                                break
+                    
+                    # If there's an opposite position, close it first
+                    if current_position and current_position["side"] == opposite_side:
+                        close_size = current_position["size"]
+                        logger.info(f"Closing opposite position: {close_size} {current_position['side']} -> placing {close_size} {side}")
+                        
+                        # Close existing position
+                        close_result = await delta_client.place_order(
+                            product_id=product_id,
+                            order_type="market_order",
+                            size=int(close_size),
+                            side=side  # Opposite side to close
+                        )
+                        logger.info(f"Position closed: {close_result}")
+                        
+                        # Record the close trade
+                        await db.trades.insert_one({
+                            "id": str(uuid.uuid4()),
+                            "user_id": user["id"],
+                            "alert_id": alert["id"],
+                            "symbol": symbol,
+                            "product_symbol": product_symbol,
+                            "strategy_type": strategy_type,
+                            "instrument": instrument,
+                            "action": f"CLOSE_{current_position['side'].upper()}",
+                            "side": side,
+                            "quantity": int(close_size),
+                            "product_id": product_id,
+                            "result": close_result,
+                            "status": "success",
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        })
+                    
+                    # Now open new position
+                    logger.info(f"Opening new position: {quantity} {side} for {product_symbol}")
                     result = await delta_client.place_order(
                         product_id=product_id,
                         order_type="market_order",
@@ -1315,10 +1368,10 @@ async def execute_trades_for_alert(alert: dict):
                         side=side
                     )
                     
-                    logger.info(f"Order placed successfully for user {user['id']}: {result}")
+                    logger.info(f"New position opened: {result}")
                     
-                    # Record trade
-                    trade_record = {
+                    # Record the new trade
+                    await db.trades.insert_one({
                         "id": str(uuid.uuid4()),
                         "user_id": user["id"],
                         "alert_id": alert["id"],
@@ -1333,8 +1386,7 @@ async def execute_trades_for_alert(alert: dict):
                         "result": result,
                         "status": "success",
                         "timestamp": datetime.now(timezone.utc).isoformat()
-                    }
-                    await db.trades.insert_one(trade_record)
+                    })
                     
                 except Exception as order_err:
                     logger.error(f"Order placement failed for user {user['id']}: {order_err}")
