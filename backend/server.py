@@ -1148,8 +1148,13 @@ async def execute_trades_for_alert(alert: dict):
                 logger.info(f"Products containing {clean_symbol}: {available[:10]}")
                 continue
             
-            # Calculate quantity - use full contract quantity (exit_half_position is for profit booking, not entry)
-            quantity = settings.get("contract_quantity", 1)
+            # Calculate quantity - use instrument-specific lot size
+            if "BTC" in clean_symbol:
+                quantity = settings.get("btc_lot_size", settings.get("contract_quantity", 1))
+            elif "ETH" in clean_symbol:
+                quantity = settings.get("eth_lot_size", settings.get("contract_quantity", 1))
+            else:
+                quantity = settings.get("contract_quantity", 1)
             
             # Place order
             side = "buy" if action == "BUY" else "sell"
