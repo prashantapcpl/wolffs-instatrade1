@@ -459,37 +459,28 @@ export default function SettingsPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {/* IMPORTANT: Whitelisted IP Notice */}
+                                {/* IMPORTANT: API Key Setup Notice */}
                                 <div className="p-4 bg-neon-green-dim rounded-sm border border-neon-green/30">
                                     <div className="flex items-start gap-3">
                                         <div className="w-8 h-8 bg-neon-green rounded-md flex items-center justify-center flex-shrink-0">
                                             <Shield className="w-4 h-4 text-black" />
                                         </div>
-                                        <div>
-                                            <p className="text-neon-green font-medium">Important: Whitelist This IP in Delta Exchange</p>
-                                            <p className="text-gray-300 text-sm mt-1">
-                                                Before connecting, add this IP to your Delta Exchange API whitelist:
-                                            </p>
-                                            <div className="mt-2 p-2 bg-obsidian rounded-sm border border-neon-green/20 flex items-center justify-between">
-                                                <code className="text-neon-green font-mono text-lg">104.198.214.223</code>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText('104.198.214.223');
-                                                        toast.success('IP copied to clipboard!');
-                                                    }}
-                                                    className="text-neon-green hover:bg-neon-green/10"
-                                                >
-                                                    <Copy className="w-4 h-4" />
-                                                </Button>
+                                        <div className="space-y-3">
+                                            <p className="text-neon-green font-medium">Important: Create API Key WITHOUT IP Restriction</p>
+                                            <div className="text-gray-300 text-sm space-y-2">
+                                                <p>For seamless connectivity, create your Delta Exchange API key <strong className="text-white">without IP whitelisting</strong>:</p>
+                                                <ol className="list-decimal list-inside space-y-1 text-gray-400 ml-2">
+                                                    <li>Go to <a href="https://www.delta.exchange/app/account/manageapikeys" target="_blank" rel="noopener noreferrer" className="text-neon-green hover:underline">Delta Exchange API Keys</a></li>
+                                                    <li>Click "Create New API Key"</li>
+                                                    <li><strong className="text-yellow-400">Leave IP Whitelist field EMPTY</strong></li>
+                                                    <li>Save the API Secret immediately (shown only once)</li>
+                                                </ol>
                                             </div>
-                                            <p className="text-yellow-500 text-xs mt-2">
-                                                <strong>Preview Environment IP:</strong> 104.198.214.223
-                                            </p>
-                                            <p className="text-gray-500 text-xs mt-1">
-                                                <strong>Production Deployment:</strong> Contact support@emergent.sh for production IP if deploying to production.
-                                            </p>
+                                            <div className="p-2 bg-obsidian/50 rounded-sm border border-yellow-500/30">
+                                                <p className="text-yellow-400 text-xs">
+                                                    <strong>⚠️ Why no IP restriction?</strong> This app uses dynamic IPs. Creating keys without IP restriction ensures reliable connectivity.
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
