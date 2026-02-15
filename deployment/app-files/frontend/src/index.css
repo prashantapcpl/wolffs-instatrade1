@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 2%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 4%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 4%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 152 100% 50%;
+        --primary-foreground: 0 0% 0%;
+        --secondary: 0 0% 10%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 10%;
+        --muted-foreground: 0 0% 60%;
+        --accent: 0 0% 10%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 15%;
+        --input: 0 0% 15%;
+        --ring: 152 100% 50%;
+        --radius: 0.375rem;
+        --chart-1: 152 100% 50%;
+        --chart-2: 0 84% 60%;
+        --chart-3: 217 91% 60%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-obsidian text-white font-body antialiased;
+        margin: 0;
+        min-height: 100vh;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-headings tracking-tight;
+    }
+    
+    code, pre, .mono {
+        @apply font-mono;
+    }
+}
+
+@layer utilities {
+    .text-buy {
+        @apply text-neon-green;
+    }
+    
+    .text-sell {
+        @apply text-neon-red;
+    }
+    
+    .bg-buy {
+        @apply bg-neon-green-dim text-neon-green border border-neon-green/20;
+    }
+    
+    .bg-sell {
+        @apply bg-neon-red-dim text-neon-red border border-neon-red/20;
+    }
+    
+    .card-dark {
+        @apply bg-surface border border-white/10 rounded-sm;
+    }
+    
+    .btn-primary {
+        @apply bg-neon-green text-black font-bold hover:bg-neon-green/80 rounded-md px-6 py-2 uppercase tracking-wide;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 0 15px rgba(0, 255, 148, 0.2);
+    }
+    
+    .btn-primary:hover {
+        box-shadow: 0 0 25px rgba(0, 255, 148, 0.4);
+    }
+    
+    .btn-secondary {
+        @apply bg-transparent border border-white/20 text-white hover:bg-white/5 rounded-md px-6 py-2 uppercase tracking-wide;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    
+    .btn-destructive {
+        @apply bg-neon-red text-white font-bold hover:bg-neon-red/80 rounded-md px-6 py-2 uppercase tracking-wide;
+        transition: background-color 0.2s ease;
+        box-shadow: 0 0 15px rgba(255, 59, 48, 0.2);
+    }
+    
+    .input-dark {
+        @apply bg-obsidian border border-white/10 text-white placeholder:text-gray-600 focus:border-neon-green focus:ring-1 focus:ring-neon-green rounded-md h-10 pr-3 font-mono text-sm;
+        transition: border-color 0.2s ease;
+        padding-left: 0.75rem;
+    }
+    
+    .input-dark.pl-10 {
+        padding-left: 2.5rem !important;
+    }
+    
+    .status-active {
+        @apply bg-neon-green;
+        box-shadow: 0 0 10px rgba(0, 255, 148, 0.5);
+    }
+    
+    .status-inactive {
+        @apply bg-gray-600;
+    }
+    
+    .glass {
+        @apply backdrop-blur-xl bg-surface/80 border border-white/10;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-obsidian;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-white/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/30;
+}
+
+/* Selection */
+::selection {
+    @apply bg-neon-green/30 text-white;
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit;
+        margin-right: inherit;
+        margin-top: inherit;
+        margin-bottom: inherit;
+        padding-left: inherit;
+        padding-right: inherit;
+        padding-top: inherit;
+        padding-bottom: inherit;
+        column-gap: inherit;
+        row-gap: inherit;
+        gap: inherit;
+        border-left-width: inherit;
+        border-right-width: inherit;
+        border-top-width: inherit;
+        border-bottom-width: inherit;
+        border-left-style: inherit;
+        border-right-style: inherit;
+        border-top-style: inherit;
+        border-bottom-style: inherit;
+        border-left-color: inherit;
+        border-right-color: inherit;
+        border-top-color: inherit;
+        border-bottom-color: inherit;
+    }
+}

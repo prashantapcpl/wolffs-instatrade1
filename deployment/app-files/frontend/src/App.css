@@ -1,0 +1,128 @@
+/* Wolffs Insta AutoTrade - App Styles */
+
+.login-bg {
+    background-image: url('https://images.unsplash.com/photo-1737505599162-d9932323a889?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjBkaWdpdGFsJTIwdGVjaG5vbG9neSUyMG5ldHdvcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDk4MjA1N3ww&ixlib=rb-4.1.0&q=85');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.logo-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.alert-item {
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pulse-dot {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(0, 255, 148, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(0, 255, 148, 0.8);
+    }
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card-hover:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Button animations */
+.btn-animated {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-animated::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.btn-animated:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* Price display */
+.price-up {
+    color: #00FF94;
+}
+
+.price-down {
+    color: #FF3B30;
+}
+
+/* Loading skeleton */
+.skeleton {
+    background: linear-gradient(90deg, #18181B 25%, #27272A 50%, #18181B 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Status indicator */
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-connected {
+    background: #00FF94;
+    box-shadow: 0 0 10px rgba(0, 255, 148, 0.5);
+}
+
+.status-disconnected {
+    background: #FF3B30;
+    box-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+}
+
+/* Hide scrollbar for cleaner look */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
