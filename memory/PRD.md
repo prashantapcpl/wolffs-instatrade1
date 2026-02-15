@@ -85,7 +85,7 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - **Auth**: JWT with localStorage
 - **Broker**: Delta Exchange API (HMAC-SHA256 signatures)
 - **Webhook**: POST /api/webhook/tradingview
-- **Static IP**: 104.198.214.223 (for Delta Exchange whitelisting)
+- **Important**: App uses dynamic IPs - Delta Exchange API keys must be created WITHOUT IP restriction
 
 ## API Endpoints
 ```
