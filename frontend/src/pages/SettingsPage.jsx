@@ -407,12 +407,11 @@ export default function SettingsPage() {
                                     </p>
                                 </div>
                                 
-                                {/* Whitelisted IP Reference */}
+                                {/* API Key Setup Reference */}
                                 <div className="p-3 bg-obsidian rounded-sm border border-white/10">
                                     <p className="text-gray-400 text-sm">
-                                        <strong className="text-white">Preview IP:</strong>{' '}
-                                        <code className="text-neon-green font-mono">104.198.214.223</code>
-                                        <span className="text-gray-500 ml-2">(for production, contact support@emergent.sh)</span>
+                                        <strong className="text-white">Tip:</strong>{' '}
+                                        <span className="text-gray-300">Ensure your API key was created without IP restriction for reliable connectivity.</span>
                                     </p>
                                 </div>
                             </div>
