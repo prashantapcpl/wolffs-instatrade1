@@ -46,6 +46,14 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - ✅ Static IP display (`104.198.214.223`) for Delta Exchange whitelisting
 - ✅ Webhook setup guide in settings page
 
+### Phase 1B Options Trading - Feb 17, 2026
+- ✅ **WebSocket Alert Filtering** - Users only see alerts matching their subscription type (wolffs_alerts or custom_strategy)
+- ✅ **Full Options Trading Logic** - Implements ATM/OTM strike calculation based on spot price
+- ✅ **5 Expiry Options** - Same Day, Next Day, Day After, Weekly, Monthly
+- ✅ **3 Strike Selection Options** - ATM, 1 OTM, 2 OTM (configurable per user)
+- ✅ **Strategy Type Badge** - Dashboard shows FUTURES or OPTIONS badge on alerts
+- ✅ **Proper Delta Exchange Option Symbol Matching** - Parses symbol format with strike and expiry
+
 ### Critical Bug Fixes - Feb 14, 2026
 - ✅ **Fixed Backend Crash** - Syntax error at line 281 (orphan `})` bracket)
 - ✅ **Fixed Duplicate Trades** - Implemented MongoDB-based deduplication with `alert_locks` collection and TTL index
