@@ -784,20 +784,27 @@ export default function SettingsPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-gray-400 text-xs">Expiry Preference</Label>
-                                            <div className="flex gap-2">
-                                                {['weekly', 'monthly'].map((exp) => (
+                                            <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                                                {[
+                                                    { value: 'same_day', label: 'Same Day' },
+                                                    { value: 'next_day', label: 'Next Day' },
+                                                    { value: 'day_after', label: 'Day After' },
+                                                    { value: 'weekly', label: 'Weekly' },
+                                                    { value: 'monthly', label: 'Monthly' }
+                                                ].map((exp) => (
                                                     <Button
-                                                        key={exp}
+                                                        key={exp.value}
                                                         variant="outline"
-                                                        onClick={() => setOptionsExpiry(exp)}
-                                                        className={`flex-1 ${optionsExpiry === exp 
+                                                        onClick={() => setOptionsExpiry(exp.value)}
+                                                        className={`${optionsExpiry === exp.value 
                                                             ? 'bg-neon-green text-black border-neon-green' 
-                                                            : 'btn-secondary'}`}
+                                                            : 'btn-secondary'} text-xs px-2`}
                                                     >
-                                                        {exp.charAt(0).toUpperCase() + exp.slice(1)}
+                                                        {exp.label}
                                                     </Button>
                                                 ))}
                                             </div>
+                                            <p className="text-gray-500 text-xs">Select which expiry to trade</p>
                                         </div>
                                     </div>
                                 </div>
