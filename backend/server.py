@@ -137,8 +137,8 @@ class TradingSettings(BaseModel):
     eth_options_enabled: bool = False
     eth_options_lot_size: int = 1
     # Options Settings (when options are enabled)
-    options_strike_selection: str = "atm"  # "atm", "otm_1", "otm_2" (1 or 2 strikes OTM)
-    options_expiry: str = "weekly"  # "weekly" or "monthly"
+    options_strike_selection: str = "atm"  # "atm", "otm_1", "otm_2"
+    options_expiry: str = "weekly"  # "same_day", "next_day", "day_after", "weekly", "monthly"
     # General Settings
     profit_percentage: float = 75.0
     exit_half_position: bool = False
