@@ -1181,7 +1181,7 @@ async def execute_trades_for_alert(alert: dict):
     logger.info(f"Processing trade: symbol={symbol}, instrument={alert_instrument}, action={action}, strategy_type={alert_strategy_type}")
     
     if not alert_instrument:
-        logger.error(f"No instrument specified in alert, skipping trade execution")
+        logger.error("No instrument specified in alert, skipping trade execution")
         return
     
     # Find users based on alert source
