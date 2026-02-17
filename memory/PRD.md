@@ -56,14 +56,18 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 
 ## Prioritized Backlog
 
-### P0 - Critical (In Progress)
-- [ ] BTC Options trading debugging - Not fully working yet
+### P0 - Critical (COMPLETED)
+- [x] WebSocket Alert Filtering - Users only see alerts relevant to their subscription type
+- [x] Options Trading Logic - Full implementation with ATM/OTM strike selection
+- [x] Expiry Selection - Same Day, Next Day, Day After, Weekly, Monthly options
+- [x] Strategy Type Badge - Shows FUTURES or OPTIONS on alert display
 
 ### P1 - High Priority (Phase 1C)
 - [ ] Performance reports (12hr/24hr/1week/1month/3month)
 - [ ] PDF export functionality
 - [ ] Trade history with P&L calculation
 - [ ] Position monitoring dashboard
+- [ ] Password reset feature (Admin-led or self-serve via Email/SMS)
 
 ### P2 - Medium Priority (Phase 2)
 - [ ] Chartink webhook integration
@@ -72,6 +76,7 @@ Build a TradingView to Delta Exchange auto-trading app for BTC/ETH futures and o
 - [ ] Fyers API integration
 - [ ] Symbol mapping engine for stocks
 - [ ] MCX futures trading
+- [ ] Chatbot integration (AI or Live Chat)
 
 ### P3 - Nice to Have
 - [ ] Mobile OTP verification
