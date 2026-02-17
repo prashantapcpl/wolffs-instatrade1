@@ -52,11 +52,33 @@ export default function DashboardPage() {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'new_alert') {
+                    const alert = data.alert;
+                    
+                    // FILTER: Only show alerts relevant to this user
+                    const shouldShowAlert = () => {
+                        if (!user) return false;
+                        const subscriberType = user?.trading_settings?.subscriber_type || user?.subscription?.plan_type || 'wolffs_alerts';
+                        
+                        if (subscriberType === 'wolffs_alerts') {
+                            // WolffsInsta subscribers only see admin/wolffs_alerts
+                            return alert.source === 'wolffs_alerts';
+                        } else if (subscriberType === 'custom_strategy') {
+                            // Custom strategy users only see their own alerts
+                            return alert.source === 'custom_strategy' && alert.source_id === user.id;
+                        }
+                        return false;
+                    };
+                    
+                    // Only add alert if it passes the filter
+                    if (!shouldShowAlert()) {
+                        console.log('Alert filtered out:', alert.source, 'user type:', user?.trading_settings?.subscriber_type);
+                        return;
+                    }
+                    
                     // Add new alert to the top of the list
-                    setAlerts(prev => [data.alert, ...prev]);
+                    setAlerts(prev => [alert, ...prev]);
                     
                     // Show instant toast notification
-                    const alert = data.alert;
                     toast(
                         <div className="flex items-center gap-3">
                             {alert.action === 'BUY' ? (
@@ -66,7 +88,14 @@ export default function DashboardPage() {
                             )}
                             <div>
                                 <p className="font-bold">{alert.symbol} {alert.action}</p>
-                                {alert.price && <p className="text-sm text-gray-400">${parseFloat(alert.price).toLocaleString()}</p>}
+                                <div className="flex items-center gap-2">
+                                    {alert.price && <span className="text-sm text-gray-400">${parseFloat(alert.price).toLocaleString()}</span>}
+                                    {alert.strategy_type && alert.strategy_type !== 'both' && (
+                                        <span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-gray-300 uppercase">
+                                            {alert.strategy_type}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>,
                         {
