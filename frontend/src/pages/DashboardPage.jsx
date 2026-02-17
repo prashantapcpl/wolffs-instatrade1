@@ -609,6 +609,19 @@ export default function DashboardPage() {
                                                                 <Badge className={alert.action === 'BUY' ? 'bg-buy' : 'bg-sell'}>
                                                                     {alert.action}
                                                                 </Badge>
+                                                                {/* Strategy Type Badge */}
+                                                                {alert.strategy_type && alert.strategy_type !== 'both' && (
+                                                                    <Badge 
+                                                                        variant="outline" 
+                                                                        className={`text-xs ${
+                                                                            alert.strategy_type === 'futures' 
+                                                                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
+                                                                                : 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                                                                        }`}
+                                                                    >
+                                                                        {alert.strategy_type.toUpperCase()}
+                                                                    </Badge>
+                                                                )}
                                                             </div>
                                                             {alert.price && (
                                                                 <p className="text-gray-400 text-sm font-mono mt-1">
