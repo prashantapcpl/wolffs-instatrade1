@@ -1457,7 +1457,7 @@ async def execute_trades_for_alert(alert: dict):
                                 product_expiry = datetime.fromisoformat(p["settlement_time"].replace("Z", "+00:00")).date()
                                 if product_expiry == target_expiry_date:
                                     expiry_match = True
-                            except:
+                            except Exception:
                                 pass
                         
                         # Calculate score (lower is better)
