@@ -1176,6 +1176,7 @@ async def execute_trades_for_alert(alert: dict):
     source_id = alert.get("source_id", "admin")
     alert_strategy_type = alert.get("strategy_type", "both")
     alert_instrument = alert.get("instrument")  # Use pre-determined instrument
+    alert_price = alert.get("price")  # Current price from alert
     
     logger.info(f"Processing trade: symbol={symbol}, instrument={alert_instrument}, action={action}, strategy_type={alert_strategy_type}")
     
@@ -1264,7 +1265,8 @@ async def execute_trades_for_alert(alert: dict):
             )
             
             # Get all products
-            products = await delta_client.get_products()
+            products_response = await delta_client.get_products()
+            products = products_response.get("result", [])
             
             # Execute each strategy
             for strategy in strategies_to_execute:
@@ -1274,29 +1276,222 @@ async def execute_trades_for_alert(alert: dict):
                 instrument = strategy["instrument"]
                 quantity = strategy["lot_size"]
                 
-                for p in products.get("result", []):
-                    p_symbol = p.get("symbol", "").upper()
-                    p_type = str(p.get("product_type", "")).lower()
-                    
-                    if strategy_type == "futures":
-                        # Match perpetual/futures
+                if strategy_type == "futures":
+                    # FUTURES: Find perpetual contract
+                    for p in products:
+                        p_symbol = p.get("symbol", "").upper()
+                        p_type = str(p.get("product_type", "")).lower()
+                        
                         is_perpetual = 'perpetual' in p_type or 'futures' in p_type or p_symbol in ['BTCUSD', 'ETHUSD']
                         if instrument in p_symbol and (is_perpetual or p_symbol in ['BTCUSD', 'ETHUSD']):
                             product_id = p["id"]
                             product_symbol = p["symbol"]
                             logger.info(f"Found futures product: {product_symbol} (ID: {product_id})")
                             break
-                    elif strategy_type == "options":
-                        # Match options - look for call options for BUY, put options for SELL
-                        is_option = 'option' in p_type or 'call' in p_type or 'put' in p_type
-                        option_type = "call" if action == "BUY" else "put"
-                        if instrument in p_symbol and is_option and option_type in p_symbol.lower():
-                            # For now, get the first matching option
-                            # TODO: Implement proper strike selection based on ATM/OTM
-                            product_id = p["id"]
-                            product_symbol = p["symbol"]
-                            logger.info(f"Found options product: {product_symbol} (ID: {product_id})")
-                            break
+                
+                elif strategy_type == "options":
+                    # OPTIONS: Full implementation with ATM/OTM strike selection and expiry
+                    strike_selection = strategy.get("strike_selection", "atm")
+                    expiry_preference = strategy.get("expiry", "weekly")
+                    option_type = "C" if action == "BUY" else "P"  # Call for BUY, Put for SELL
+                    
+                    # Get spot price - use alert price or fetch from products
+                    spot_price = alert_price
+                    if not spot_price:
+                        # Try to get spot price from perpetual product
+                        for p in products:
+                            p_symbol = p.get("symbol", "").upper()
+                            if instrument in p_symbol and ('perpetual' in str(p.get("product_type", "")).lower() or p_symbol in ['BTCUSD', 'ETHUSD']):
+                                spot_price = float(p.get("spot_price") or p.get("mark_price") or 0)
+                                if spot_price > 0:
+                                    break
+                    
+                    if not spot_price:
+                        # Default prices if we can't fetch
+                        spot_price = 95000 if instrument == "BTC" else 3500
+                        logger.warning(f"Using default spot price for {instrument}: {spot_price}")
+                    else:
+                        spot_price = float(spot_price)
+                    
+                    logger.info(f"Options trading - Instrument: {instrument}, Spot: {spot_price}, Strike Selection: {strike_selection}, Expiry: {expiry_preference}")
+                    
+                    # Calculate strike interval based on instrument
+                    if instrument == "BTC":
+                        strike_interval = 1000  # BTC options have $1000 strike intervals
+                    else:
+                        strike_interval = 50  # ETH options have $50 strike intervals
+                    
+                    # Calculate ATM strike (nearest round strike)
+                    atm_strike = round(spot_price / strike_interval) * strike_interval
+                    
+                    # Calculate target strike based on selection
+                    if strike_selection == "atm":
+                        target_strike = atm_strike
+                    elif strike_selection == "otm_1":
+                        # 1 strike OTM: higher for calls, lower for puts
+                        if option_type == "C":
+                            target_strike = atm_strike + strike_interval
+                        else:
+                            target_strike = atm_strike - strike_interval
+                    elif strike_selection == "otm_2":
+                        # 2 strikes OTM
+                        if option_type == "C":
+                            target_strike = atm_strike + (2 * strike_interval)
+                        else:
+                            target_strike = atm_strike - (2 * strike_interval)
+                    else:
+                        target_strike = atm_strike
+                    
+                    logger.info(f"Target strike: {target_strike} (ATM: {atm_strike})")
+                    
+                    # Calculate target expiry date
+                    now = datetime.now(timezone.utc)
+                    today = now.date()
+                    
+                    if expiry_preference == "same_day":
+                        target_expiry_date = today
+                    elif expiry_preference == "next_day":
+                        target_expiry_date = today + timedelta(days=1)
+                    elif expiry_preference == "day_after":
+                        target_expiry_date = today + timedelta(days=2)
+                    elif expiry_preference == "weekly":
+                        # Find next Friday (or same day if today is Friday)
+                        days_until_friday = (4 - today.weekday()) % 7
+                        if days_until_friday == 0 and now.hour >= 12:  # If Friday afternoon, use next week
+                            days_until_friday = 7
+                        target_expiry_date = today + timedelta(days=days_until_friday)
+                    elif expiry_preference == "monthly":
+                        # Find last Friday of current or next month
+                        import calendar
+                        year = today.year
+                        month = today.month
+                        
+                        # Get last day of month
+                        last_day = calendar.monthrange(year, month)[1]
+                        last_date = today.replace(day=last_day)
+                        
+                        # Find last Friday
+                        while last_date.weekday() != 4:  # 4 = Friday
+                            last_date -= timedelta(days=1)
+                        
+                        # If already past this month's expiry, use next month
+                        if last_date <= today:
+                            if month == 12:
+                                year += 1
+                                month = 1
+                            else:
+                                month += 1
+                            last_day = calendar.monthrange(year, month)[1]
+                            last_date = today.replace(year=year, month=month, day=last_day)
+                            while last_date.weekday() != 4:
+                                last_date -= timedelta(days=1)
+                        
+                        target_expiry_date = last_date
+                    else:
+                        # Default to weekly
+                        days_until_friday = (4 - today.weekday()) % 7
+                        if days_until_friday == 0:
+                            days_until_friday = 7
+                        target_expiry_date = today + timedelta(days=days_until_friday)
+                    
+                    logger.info(f"Target expiry date: {target_expiry_date}")
+                    
+                    # Build expected option symbol patterns
+                    # Delta Exchange format: BTC-DDMMMYY-STRIKE-C/P (e.g., BTC-27DEC24-95000-C)
+                    # Or: BTCUSD-DDMMMYY-STRIKE-C/P
+                    expiry_str_formats = [
+                        target_expiry_date.strftime("%d%b%y").upper(),  # 27DEC24
+                        target_expiry_date.strftime("%d%b%Y").upper(),  # 27DEC2024
+                        target_expiry_date.strftime("%Y%m%d"),          # 20241227
+                    ]
+                    
+                    # Find matching option product
+                    best_match = None
+                    best_match_score = -1
+                    
+                    for p in products:
+                        p_symbol = p.get("symbol", "").upper()
+                        p_type = str(p.get("product_type", "")).lower()
+                        
+                        # Must be an option
+                        if 'option' not in p_type and 'call' not in p_type and 'put' not in p_type:
+                            continue
+                        
+                        # Must match instrument
+                        if instrument not in p_symbol:
+                            continue
+                        
+                        # Must match option type (C or P)
+                        if f"-{option_type}" not in p_symbol and not p_symbol.endswith(option_type):
+                            continue
+                        
+                        # Extract strike price from symbol
+                        # Try to find the strike in the symbol
+                        strike_in_symbol = None
+                        parts = p_symbol.replace("-", " ").split()
+                        for part in parts:
+                            try:
+                                potential_strike = int(part)
+                                if 100 < potential_strike < 200000:  # Reasonable strike range
+                                    strike_in_symbol = potential_strike
+                                    break
+                            except ValueError:
+                                continue
+                        
+                        if not strike_in_symbol:
+                            continue
+                        
+                        # Calculate match score based on strike proximity and expiry match
+                        strike_diff = abs(strike_in_symbol - target_strike)
+                        
+                        # Check if expiry matches
+                        expiry_match = False
+                        for exp_fmt in expiry_str_formats:
+                            if exp_fmt in p_symbol:
+                                expiry_match = True
+                                break
+                        
+                        # Also check product's expiry_time field
+                        if not expiry_match and p.get("settlement_time"):
+                            try:
+                                product_expiry = datetime.fromisoformat(p["settlement_time"].replace("Z", "+00:00")).date()
+                                if product_expiry == target_expiry_date:
+                                    expiry_match = True
+                            except:
+                                pass
+                        
+                        # Calculate score (lower is better)
+                        # Heavily penalize wrong expiry
+                        score = strike_diff / strike_interval
+                        if not expiry_match:
+                            score += 1000  # Heavy penalty for wrong expiry
+                        
+                        if best_match is None or score < best_match_score:
+                            best_match = p
+                            best_match_score = score
+                            logger.info(f"Potential match: {p_symbol}, strike={strike_in_symbol}, score={score}")
+                    
+                    if best_match and best_match_score < 100:  # Allow some tolerance
+                        product_id = best_match["id"]
+                        product_symbol = best_match["symbol"]
+                        logger.info(f"Found options product: {product_symbol} (ID: {product_id})")
+                    else:
+                        logger.warning(f"No matching options product found for {instrument} {option_type} @ {target_strike} exp {target_expiry_date}")
+                        # Record failed trade due to no matching product
+                        await db.trades.insert_one({
+                            "id": str(uuid.uuid4()),
+                            "user_id": user["id"],
+                            "alert_id": alert["id"],
+                            "symbol": symbol,
+                            "strategy_type": strategy_type,
+                            "instrument": instrument,
+                            "action": action,
+                            "quantity": quantity,
+                            "status": "failed",
+                            "error": f"No matching options product: {instrument} {option_type} @ strike {target_strike} expiry {target_expiry_date}",
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        })
+                        continue
                 
                 if not product_id:
                     logger.warning(f"No matching {strategy_type} product found for {instrument}")
@@ -1395,6 +1590,7 @@ async def execute_trades_for_alert(alert: dict):
                         "user_id": user["id"],
                         "alert_id": alert["id"],
                         "symbol": symbol,
+                        "product_symbol": product_symbol if product_symbol else "UNKNOWN",
                         "strategy_type": strategy_type,
                         "instrument": instrument,
                         "action": action,
