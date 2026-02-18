@@ -1396,85 +1396,83 @@ async def execute_trades_for_alert(alert: dict):
                     
                     logger.info(f"Target expiry date: {target_expiry_date}")
                     
-                    # Build expected option symbol patterns
-                    # Delta Exchange format: BTC-DDMMMYY-STRIKE-C/P (e.g., BTC-27DEC24-95000-C)
-                    # Or: BTCUSD-DDMMMYY-STRIKE-C/P
-                    expiry_str_formats = [
-                        target_expiry_date.strftime("%d%b%y").upper(),  # 27DEC24
-                        target_expiry_date.strftime("%d%b%Y").upper(),  # 27DEC2024
-                        target_expiry_date.strftime("%Y%m%d"),          # 20241227
-                    ]
+                    # Delta Exchange ACTUAL format: C-BTC-66000-200226 or P-ETH-3500-200226
+                    # Format: {C/P}-{ASSET}-{STRIKE}-{DDMMYY}
+                    target_expiry_str = target_expiry_date.strftime("%d%m%y")  # DDMMYY format
+                    
+                    # Build the expected option symbol prefix
+                    # e.g., "C-BTC-" for BTC Call or "P-ETH-" for ETH Put
+                    option_prefix = f"{option_type}-{instrument}-"
+                    
+                    logger.info(f"Looking for options with prefix: {option_prefix}, target strike: {target_strike}, expiry: {target_expiry_str}")
                     
                     # Find matching option product
                     best_match = None
-                    best_match_score = -1
+                    best_match_score = float('inf')
                     
                     for p in products:
                         p_symbol = p.get("symbol", "").upper()
-                        p_type = str(p.get("product_type", "")).lower()
+                        contract_type = str(p.get("contract_type", "")).lower()
                         
-                        # Must be an option
-                        if 'option' not in p_type and 'call' not in p_type and 'put' not in p_type:
+                        # Must be a call or put option
+                        is_call_option = contract_type == "call_options" or p_symbol.startswith("C-")
+                        is_put_option = contract_type == "put_options" or p_symbol.startswith("P-")
+                        
+                        if not (is_call_option or is_put_option):
+                            continue
+                        
+                        # Must match the option type we want (C for BUY/Call, P for SELL/Put)
+                        if option_type == "C" and not is_call_option:
+                            continue
+                        if option_type == "P" and not is_put_option:
                             continue
                         
                         # Must match instrument
-                        if instrument not in p_symbol:
+                        if f"-{instrument}-" not in p_symbol:
                             continue
                         
-                        # Must match option type (C or P)
-                        if f"-{option_type}" not in p_symbol and not p_symbol.endswith(option_type):
+                        # Parse Delta Exchange symbol format: C-BTC-66000-200226
+                        parts = p_symbol.split("-")
+                        if len(parts) != 4:
                             continue
                         
-                        # Extract strike price from symbol
-                        # Try to find the strike in the symbol
-                        strike_in_symbol = None
-                        parts = p_symbol.replace("-", " ").split()
-                        for part in parts:
+                        try:
+                            symbol_strike = int(parts[2])
+                            symbol_expiry = parts[3]  # DDMMYY format
+                        except (ValueError, IndexError):
+                            continue
+                        
+                        # Check expiry match
+                        expiry_match = (symbol_expiry == target_expiry_str)
+                        
+                        # If no exact expiry match, try to find closest available expiry
+                        if not expiry_match:
+                            # Parse the symbol expiry date
                             try:
-                                potential_strike = int(part)
-                                if 100 < potential_strike < 200000:  # Reasonable strike range
-                                    strike_in_symbol = potential_strike
-                                    break
+                                symbol_expiry_date = datetime.strptime(symbol_expiry, "%d%m%y").date()
+                                days_diff = abs((symbol_expiry_date - target_expiry_date).days)
+                                # Allow up to 3 days difference for flexibility
+                                if days_diff <= 3:
+                                    expiry_match = True
                             except ValueError:
                                 continue
                         
-                        if not strike_in_symbol:
+                        if not expiry_match:
                             continue
                         
-                        # Calculate match score based on strike proximity and expiry match
-                        strike_diff = abs(strike_in_symbol - target_strike)
-                        
-                        # Check if expiry matches
-                        expiry_match = False
-                        for exp_fmt in expiry_str_formats:
-                            if exp_fmt in p_symbol:
-                                expiry_match = True
-                                break
-                        
-                        # Also check product's expiry_time field
-                        if not expiry_match and p.get("settlement_time"):
-                            try:
-                                product_expiry = datetime.fromisoformat(p["settlement_time"].replace("Z", "+00:00")).date()
-                                if product_expiry == target_expiry_date:
-                                    expiry_match = True
-                            except Exception:
-                                pass
-                        
-                        # Calculate score (lower is better)
-                        # Heavily penalize wrong expiry
+                        # Calculate strike difference score (lower is better)
+                        strike_diff = abs(symbol_strike - target_strike)
                         score = strike_diff / strike_interval
-                        if not expiry_match:
-                            score += 1000  # Heavy penalty for wrong expiry
                         
-                        if best_match is None or score < best_match_score:
+                        if score < best_match_score:
                             best_match = p
                             best_match_score = score
-                            logger.info(f"Potential match: {p_symbol}, strike={strike_in_symbol}, score={score}")
+                            logger.info(f"Potential match: {p_symbol}, strike={symbol_strike}, expiry={symbol_expiry}, score={score:.2f}")
                     
-                    if best_match and best_match_score < 100:  # Allow some tolerance
+                    if best_match and best_match_score < 5:  # Allow up to 5 strikes difference
                         product_id = best_match["id"]
                         product_symbol = best_match["symbol"]
-                        logger.info(f"Found options product: {product_symbol} (ID: {product_id})")
+                        logger.info(f"✅ Found options product: {product_symbol} (ID: {product_id})")
                     else:
                         logger.warning(f"No matching options product found for {instrument} {option_type} @ {target_strike} exp {target_expiry_date}")
                         # Record failed trade due to no matching product
