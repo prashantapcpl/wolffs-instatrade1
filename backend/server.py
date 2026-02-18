@@ -1316,10 +1316,13 @@ async def execute_trades_for_alert(alert: dict):
                     logger.info(f"Options trading - Instrument: {instrument}, Spot: {spot_price}, Strike Selection: {strike_selection}, Expiry: {expiry_preference}")
                     
                     # Calculate strike interval based on instrument
+                    # Based on actual Delta Exchange data:
+                    # BTC: $1000 intervals (some $200 near ATM)
+                    # ETH: $20 intervals
                     if instrument == "BTC":
                         strike_interval = 1000  # BTC options have $1000 strike intervals
                     else:
-                        strike_interval = 50  # ETH options have $50 strike intervals
+                        strike_interval = 20  # ETH options have $20 strike intervals
                     
                     # Calculate ATM strike (nearest round strike)
                     atm_strike = round(spot_price / strike_interval) * strike_interval
