@@ -1472,9 +1472,13 @@ async def execute_trades_for_alert(alert: dict):
                             best_match_score = score
                             logger.info(f"Potential match: {p_symbol}, strike={symbol_strike}, expiry={symbol_expiry}, score={score:.2f}")
                     
-                    if best_match and best_match_score < 5:  # Allow up to 5 strikes difference
+                    # Allow larger tolerance since option chains may not have all strikes
+                    # Best match within 50 strikes difference (or any match if none closer)
+                    if best_match and best_match_score < 50:
                         product_id = best_match["id"]
                         product_symbol = best_match["symbol"]
+                        if best_match_score > 5:
+                            logger.warning(f"⚠️ Using closest available strike (score={best_match_score:.1f}): {product_symbol}")
                         logger.info(f"✅ Found options product: {product_symbol} (ID: {product_id})")
                     else:
                         logger.warning(f"No matching options product found for {instrument} {option_type} @ {target_strike} exp {target_expiry_date}")
@@ -1489,7 +1493,7 @@ async def execute_trades_for_alert(alert: dict):
                             "action": action,
                             "quantity": quantity,
                             "status": "failed",
-                            "error": f"No matching options product: {instrument} {option_type} @ strike {target_strike} expiry {target_expiry_date}",
+                            "error": f"No matching options product: {instrument} {option_type} @ strike {target_strike} expiry {target_expiry_date}. Check Delta Exchange option chain.",
                             "timestamp": datetime.now(timezone.utc).isoformat()
                         })
                         continue
