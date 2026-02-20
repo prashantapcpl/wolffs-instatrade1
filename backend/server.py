@@ -1255,9 +1255,6 @@ async def execute_trades_for_alert(alert: dict):
                     "on_buy_signal": settings.get("options_on_buy_signal", "buy_ce"),
                     "on_sell_signal": settings.get("options_on_sell_signal", "buy_pe")
                 })
-                    "strike_selection": settings.get("options_strike_selection", "atm"),
-                    "expiry": settings.get("options_expiry", "weekly")
-                })
         
         if not strategies_to_execute:
             logger.info(f"No strategies enabled for {alert_instrument} for user {user['id']}")
