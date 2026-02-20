@@ -1296,7 +1296,36 @@ async def execute_trades_for_alert(alert: dict):
                     # OPTIONS: Full implementation with ATM/OTM strike selection and expiry
                     strike_selection = strategy.get("strike_selection", "atm")
                     expiry_preference = strategy.get("expiry", "weekly")
-                    option_type = "C" if action == "BUY" else "P"  # Call for BUY, Put for SELL
+                    
+                    # Get user's option action preferences
+                    on_buy_signal = strategy.get("on_buy_signal", "buy_ce")
+                    on_sell_signal = strategy.get("on_sell_signal", "buy_pe")
+                    
+                    # Determine option type (C/P) and order side (buy/sell) based on signal and user preference
+                    if action == "BUY":
+                        option_action = on_buy_signal
+                    else:  # SELL signal
+                        option_action = on_sell_signal
+                    
+                    # Parse the option action: "buy_ce", "buy_pe", "sell_ce", "sell_pe"
+                    if option_action == "buy_ce":
+                        option_type = "C"
+                        option_side = "buy"
+                    elif option_action == "buy_pe":
+                        option_type = "P"
+                        option_side = "buy"
+                    elif option_action == "sell_ce":
+                        option_type = "C"
+                        option_side = "sell"
+                    elif option_action == "sell_pe":
+                        option_type = "P"
+                        option_side = "sell"
+                    else:
+                        # Default fallback
+                        option_type = "C" if action == "BUY" else "P"
+                        option_side = "buy"
+                    
+                    logger.info(f"Options action: Signal={action} -> Action={option_action} (Type={option_type}, Side={option_side})")
                     
                     # Get spot price - use alert price or fetch from products
                     spot_price = alert_price
