@@ -1546,8 +1546,14 @@ async def execute_trades_for_alert(alert: dict):
                 # Step 2: If position exists in opposite direction, close it first
                 # Step 3: Then open new position
                 
-                side = "buy" if action == "BUY" else "sell"
-                opposite_side = "sell" if action == "BUY" else "buy"
+                # For futures: side based on signal (BUY->buy, SELL->sell)
+                # For options: side based on user preference (option_side from settings)
+                if strategy_type == "options":
+                    side = option_side  # Already calculated from user settings
+                    opposite_side = "sell" if option_side == "buy" else "buy"
+                else:
+                    side = "buy" if action == "BUY" else "sell"
+                    opposite_side = "sell" if action == "BUY" else "buy"
                 
                 try:
                     # Get current positions
