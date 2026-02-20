@@ -1232,7 +1232,9 @@ async def execute_trades_for_alert(alert: dict):
                     "instrument": "BTC",
                     "lot_size": settings.get("btc_options_lot_size", 1),
                     "strike_selection": settings.get("options_strike_selection", "atm"),
-                    "expiry": settings.get("options_expiry", "weekly")
+                    "expiry": settings.get("options_expiry", "weekly"),
+                    "on_buy_signal": settings.get("options_on_buy_signal", "buy_ce"),
+                    "on_sell_signal": settings.get("options_on_sell_signal", "buy_pe")
                 })
         
         # ETH signals -> Only ETH strategies
@@ -1248,6 +1250,11 @@ async def execute_trades_for_alert(alert: dict):
                     "type": "options",
                     "instrument": "ETH",
                     "lot_size": settings.get("eth_options_lot_size", 1),
+                    "strike_selection": settings.get("options_strike_selection", "atm"),
+                    "expiry": settings.get("options_expiry", "weekly"),
+                    "on_buy_signal": settings.get("options_on_buy_signal", "buy_ce"),
+                    "on_sell_signal": settings.get("options_on_sell_signal", "buy_pe")
+                })
                     "strike_selection": settings.get("options_strike_selection", "atm"),
                     "expiry": settings.get("options_expiry", "weekly")
                 })
