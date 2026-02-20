@@ -812,6 +812,56 @@ export default function SettingsPage() {
                                             </div>
                                             <p className="text-gray-500 text-xs">Select which expiry to trade</p>
                                         </div>
+
+                                        {/* Options Action on BUY Signal */}
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">On BUY Signal</Label>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                {[
+                                                    { value: 'buy_ce', label: 'Buy CE' },
+                                                    { value: 'buy_pe', label: 'Buy PE' },
+                                                    { value: 'sell_ce', label: 'Sell CE' },
+                                                    { value: 'sell_pe', label: 'Sell PE' }
+                                                ].map((opt) => (
+                                                    <Button
+                                                        key={opt.value}
+                                                        variant="outline"
+                                                        onClick={() => setOptionsOnBuySignal(opt.value)}
+                                                        className={`${optionsOnBuySignal === opt.value 
+                                                            ? 'bg-green-500 text-black border-green-500' 
+                                                            : 'btn-secondary'} text-xs`}
+                                                    >
+                                                        {opt.label}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                            <p className="text-gray-500 text-xs">What to do when BUY signal received</p>
+                                        </div>
+
+                                        {/* Options Action on SELL Signal */}
+                                        <div className="space-y-2">
+                                            <Label className="text-gray-400 text-xs">On SELL Signal</Label>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                {[
+                                                    { value: 'buy_ce', label: 'Buy CE' },
+                                                    { value: 'buy_pe', label: 'Buy PE' },
+                                                    { value: 'sell_ce', label: 'Sell CE' },
+                                                    { value: 'sell_pe', label: 'Sell PE' }
+                                                ].map((opt) => (
+                                                    <Button
+                                                        key={opt.value}
+                                                        variant="outline"
+                                                        onClick={() => setOptionsOnSellSignal(opt.value)}
+                                                        className={`${optionsOnSellSignal === opt.value 
+                                                            ? 'bg-red-500 text-black border-red-500' 
+                                                            : 'btn-secondary'} text-xs`}
+                                                    >
+                                                        {opt.label}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                            <p className="text-gray-500 text-xs">What to do when SELL signal received</p>
+                                        </div>
                                     </div>
                                 </div>
                             </>
