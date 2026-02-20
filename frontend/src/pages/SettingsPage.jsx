@@ -47,6 +47,8 @@ export default function SettingsPage() {
     // Options Settings
     const [optionsStrikeSelection, setOptionsStrikeSelection] = useState('atm');
     const [optionsExpiry, setOptionsExpiry] = useState('weekly');
+    const [optionsOnBuySignal, setOptionsOnBuySignal] = useState('buy_ce');
+    const [optionsOnSellSignal, setOptionsOnSellSignal] = useState('buy_pe');
     // General Settings
     const [profitPercentage, setProfitPercentage] = useState(75);
     const [exitHalfPosition, setExitHalfPosition] = useState(false);
