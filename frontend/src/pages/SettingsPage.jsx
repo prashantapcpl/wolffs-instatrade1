@@ -92,6 +92,8 @@ export default function SettingsPage() {
             // Options Settings
             setOptionsStrikeSelection(settings.options_strike_selection || 'atm');
             setOptionsExpiry(settings.options_expiry || 'weekly');
+            setOptionsOnBuySignal(settings.options_on_buy_signal || 'buy_ce');
+            setOptionsOnSellSignal(settings.options_on_sell_signal || 'buy_pe');
             // General
             setProfitPercentage(settings.profit_percentage || 75);
             setExitHalfPosition(settings.exit_half_position || false);
