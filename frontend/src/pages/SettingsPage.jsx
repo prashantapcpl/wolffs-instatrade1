@@ -201,6 +201,8 @@ export default function SettingsPage() {
                 // Options Settings
                 options_strike_selection: optionsStrikeSelection,
                 options_expiry: optionsExpiry,
+                options_on_buy_signal: optionsOnBuySignal,
+                options_on_sell_signal: optionsOnSellSignal,
                 // General
                 profit_percentage: profitPercentage,
                 exit_half_position: exitHalfPosition,
