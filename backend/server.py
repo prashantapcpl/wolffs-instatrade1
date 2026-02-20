@@ -139,6 +139,9 @@ class TradingSettings(BaseModel):
     # Options Settings (when options are enabled)
     options_strike_selection: str = "atm"  # "atm", "otm_1", "otm_2"
     options_expiry: str = "weekly"  # "same_day", "next_day", "day_after", "weekly", "monthly"
+    # Options Action Settings - What to do on BUY/SELL signals
+    options_on_buy_signal: str = "buy_ce"  # "buy_ce", "buy_pe", "sell_ce", "sell_pe"
+    options_on_sell_signal: str = "buy_pe"  # "buy_ce", "buy_pe", "sell_ce", "sell_pe"
     # General Settings
     profit_percentage: float = 75.0
     exit_half_position: bool = False
