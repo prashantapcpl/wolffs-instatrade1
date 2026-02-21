@@ -815,7 +815,7 @@ export default function SettingsPage() {
 
                                         {/* Options Action on BUY Signal */}
                                         <div className="space-y-2">
-                                            <Label className="text-gray-400 text-xs">On BUY Signal</Label>
+                                            <Label className="text-gray-400 text-xs">On BUY Signal → <span className="text-green-400 font-medium">{optionsOnBuySignal.replace('_', ' ').toUpperCase()}</span></Label>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                 {[
                                                     { value: 'buy_ce', label: 'Buy CE' },
@@ -835,12 +835,11 @@ export default function SettingsPage() {
                                                     </Button>
                                                 ))}
                                             </div>
-                                            <p className="text-gray-500 text-xs">What to do when BUY signal received</p>
                                         </div>
 
                                         {/* Options Action on SELL Signal */}
                                         <div className="space-y-2">
-                                            <Label className="text-gray-400 text-xs">On SELL Signal</Label>
+                                            <Label className="text-gray-400 text-xs">On SELL Signal → <span className="text-red-400 font-medium">{optionsOnSellSignal.replace('_', ' ').toUpperCase()}</span></Label>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                 {[
                                                     { value: 'buy_ce', label: 'Buy CE' },
@@ -860,7 +859,6 @@ export default function SettingsPage() {
                                                     </Button>
                                                 ))}
                                             </div>
-                                            <p className="text-gray-500 text-xs">What to do when SELL signal received</p>
                                         </div>
                                     </div>
                                 </div>
