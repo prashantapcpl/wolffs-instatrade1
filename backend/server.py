@@ -1557,22 +1557,28 @@ async def execute_trades_for_alert(alert: dict):
                     positions = await delta_client.get_positions()
                     current_position = None
                     
-                    # FOR OPTIONS: First close any OPPOSITE option type (CE vs PE)
+                    # FOR OPTIONS: Close ALL existing option positions on this instrument before opening new
                     if strategy_type == "options":
-                        opposite_option_type = "P" if option_type == "C" else "C"
-                        opposite_prefix = f"{opposite_option_type}-{instrument}-"
+                        # Look for any CE or PE position on this instrument
+                        ce_prefix = f"C-{instrument}-"
+                        pe_prefix = f"P-{instrument}-"
                         
                         for pos in positions.get("result", []):
                             pos_symbol = pos.get("symbol", "").upper()
                             pos_size = float(pos.get("size", 0))
                             
-                            # Check if this is an opposite option (e.g., PE when we want CE)
-                            if pos_symbol.startswith(opposite_prefix) and pos_size != 0:
+                            # Check if this is ANY option on this instrument (CE or PE)
+                            is_instrument_option = pos_symbol.startswith(ce_prefix) or pos_symbol.startswith(pe_prefix)
+                            
+                            if is_instrument_option and pos_size != 0:
                                 close_pos_id = pos.get("product_id")
                                 close_size = abs(pos_size)
                                 close_side = "sell" if pos_size > 0 else "buy"  # Opposite to close
                                 
-                                logger.info(f"🔄 Closing opposite option position: {pos_symbol} size={close_size}")
+                                # Determine if it's CE or PE for logging
+                                opt_type = "CE" if pos_symbol.startswith(ce_prefix) else "PE"
+                                
+                                logger.info(f"🔄 Closing existing {opt_type} position: {pos_symbol} size={close_size}")
                                 
                                 try:
                                     close_result = await delta_client.place_order(
@@ -1581,7 +1587,7 @@ async def execute_trades_for_alert(alert: dict):
                                         size=int(close_size),
                                         side=close_side
                                     )
-                                    logger.info(f"✅ Opposite option closed: {close_result}")
+                                    logger.info(f"✅ {opt_type} position closed: {close_result}")
                                     
                                     # Record the close trade
                                     await db.trades.insert_one({
@@ -1592,7 +1598,7 @@ async def execute_trades_for_alert(alert: dict):
                                         "product_symbol": pos_symbol,
                                         "strategy_type": strategy_type,
                                         "instrument": instrument,
-                                        "action": f"CLOSE_{opposite_option_type}E",  # CLOSE_CE or CLOSE_PE
+                                        "action": f"CLOSE_{opt_type}",
                                         "side": close_side,
                                         "quantity": int(close_size),
                                         "product_id": close_pos_id,
@@ -1601,13 +1607,20 @@ async def execute_trades_for_alert(alert: dict):
                                         "timestamp": datetime.now(timezone.utc).isoformat()
                                     })
                                 except Exception as close_err:
-                                    logger.error(f"Failed to close opposite option: {close_err}")
+                                    logger.error(f"Failed to close {opt_type} position: {close_err}")
                     
-                    # Check for same product position (for futures or same option)
-                    for pos in positions.get("result", []):
-                        if pos.get("product_id") == product_id or pos.get("symbol", "").upper() == product_symbol:
-                            pos_size = float(pos.get("size", 0))
-                            if pos_size != 0:
+                    # Check for same product position (for futures)
+                    if strategy_type == "futures":
+                        for pos in positions.get("result", []):
+                            if pos.get("product_id") == product_id or pos.get("symbol", "").upper() == product_symbol:
+                                pos_size = float(pos.get("size", 0))
+                                if pos_size != 0:
+                                    current_position = {
+                                        "size": abs(pos_size),
+                                        "side": "buy" if pos_size > 0 else "sell"
+                                    }
+                                    logger.info(f"Current position for {product_symbol}: {current_position}")
+                                    break
                                 current_position = {
                                     "size": abs(pos_size),
                                     "side": "buy" if pos_size > 0 else "sell"
