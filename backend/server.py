@@ -1557,6 +1557,53 @@ async def execute_trades_for_alert(alert: dict):
                     positions = await delta_client.get_positions()
                     current_position = None
                     
+                    # FOR OPTIONS: First close any OPPOSITE option type (CE vs PE)
+                    if strategy_type == "options":
+                        opposite_option_type = "P" if option_type == "C" else "C"
+                        opposite_prefix = f"{opposite_option_type}-{instrument}-"
+                        
+                        for pos in positions.get("result", []):
+                            pos_symbol = pos.get("symbol", "").upper()
+                            pos_size = float(pos.get("size", 0))
+                            
+                            # Check if this is an opposite option (e.g., PE when we want CE)
+                            if pos_symbol.startswith(opposite_prefix) and pos_size != 0:
+                                close_pos_id = pos.get("product_id")
+                                close_size = abs(pos_size)
+                                close_side = "sell" if pos_size > 0 else "buy"  # Opposite to close
+                                
+                                logger.info(f"🔄 Closing opposite option position: {pos_symbol} size={close_size}")
+                                
+                                try:
+                                    close_result = await delta_client.place_order(
+                                        product_id=close_pos_id,
+                                        order_type="market_order",
+                                        size=int(close_size),
+                                        side=close_side
+                                    )
+                                    logger.info(f"✅ Opposite option closed: {close_result}")
+                                    
+                                    # Record the close trade
+                                    await db.trades.insert_one({
+                                        "id": str(uuid.uuid4()),
+                                        "user_id": user["id"],
+                                        "alert_id": alert["id"],
+                                        "symbol": symbol,
+                                        "product_symbol": pos_symbol,
+                                        "strategy_type": strategy_type,
+                                        "instrument": instrument,
+                                        "action": f"CLOSE_{opposite_option_type}E",  # CLOSE_CE or CLOSE_PE
+                                        "side": close_side,
+                                        "quantity": int(close_size),
+                                        "product_id": close_pos_id,
+                                        "result": close_result,
+                                        "status": "success",
+                                        "timestamp": datetime.now(timezone.utc).isoformat()
+                                    })
+                                except Exception as close_err:
+                                    logger.error(f"Failed to close opposite option: {close_err}")
+                    
+                    # Check for same product position (for futures or same option)
                     for pos in positions.get("result", []):
                         if pos.get("product_id") == product_id or pos.get("symbol", "").upper() == product_symbol:
                             pos_size = float(pos.get("size", 0))
@@ -1568,7 +1615,7 @@ async def execute_trades_for_alert(alert: dict):
                                 logger.info(f"Current position for {product_symbol}: {current_position}")
                                 break
                     
-                    # If there's an opposite position, close it first
+                    # If there's an opposite position on same product, close it first
                     if current_position and current_position["side"] == opposite_side:
                         close_size = current_position["size"]
                         logger.info(f"Closing opposite position: {close_size} {current_position['side']} -> placing {close_size} {side}")
