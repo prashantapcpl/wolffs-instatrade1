@@ -1587,11 +1587,20 @@ async def execute_trades_for_alert(alert: dict):
                     positions = await delta_client.get_positions()
                     current_position = None
                     
+                    # DEBUG: Log all positions returned
+                    logger.info(f"📊 Positions returned: {len(positions.get('result', []))} positions")
+                    for pos in positions.get("result", []):
+                        pos_symbol = pos.get("symbol", "")
+                        pos_size = pos.get("size", 0)
+                        logger.info(f"   Position: {pos_symbol}, size={pos_size}, product_id={pos.get('product_id')}")
+                    
                     # FOR OPTIONS: Close ALL existing option positions on this instrument before opening new
                     if strategy_type == "options":
                         # Look for any CE or PE position on this instrument
                         ce_prefix = f"C-{instrument}-"
                         pe_prefix = f"P-{instrument}-"
+                        
+                        logger.info(f"🔍 Looking for positions with prefix: {ce_prefix} or {pe_prefix}")
                         
                         for pos in positions.get("result", []):
                             pos_symbol = pos.get("symbol", "").upper()
@@ -1599,6 +1608,8 @@ async def execute_trades_for_alert(alert: dict):
                             
                             # Check if this is ANY option on this instrument (CE or PE)
                             is_instrument_option = pos_symbol.startswith(ce_prefix) or pos_symbol.startswith(pe_prefix)
+                            
+                            logger.info(f"   Checking: {pos_symbol}, size={pos_size}, matches={is_instrument_option}")
                             
                             if is_instrument_option and pos_size != 0:
                                 close_pos_id = pos.get("product_id")
