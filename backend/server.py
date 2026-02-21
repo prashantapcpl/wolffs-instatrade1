@@ -1590,7 +1590,8 @@ async def execute_trades_for_alert(alert: dict):
                     # DEBUG: Log all positions returned
                     logger.info(f"📊 Positions returned: {len(positions.get('result', []))} positions")
                     for pos in positions.get("result", []):
-                        pos_symbol = pos.get("symbol", "")
+                        # Delta Exchange uses 'product_symbol' not 'symbol'
+                        pos_symbol = pos.get("product_symbol") or pos.get("symbol", "")
                         pos_size = pos.get("size", 0)
                         logger.info(f"   Position: {pos_symbol}, size={pos_size}, product_id={pos.get('product_id')}")
                     
@@ -1603,7 +1604,8 @@ async def execute_trades_for_alert(alert: dict):
                         logger.info(f"🔍 Looking for positions with prefix: {ce_prefix} or {pe_prefix}")
                         
                         for pos in positions.get("result", []):
-                            pos_symbol = pos.get("symbol", "").upper()
+                            # Delta Exchange uses 'product_symbol' not 'symbol'
+                            pos_symbol = (pos.get("product_symbol") or pos.get("symbol", "")).upper()
                             pos_size = float(pos.get("size", 0))
                             
                             # Check if this is ANY option on this instrument (CE or PE)
