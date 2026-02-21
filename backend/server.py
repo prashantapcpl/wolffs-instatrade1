@@ -402,7 +402,37 @@ class DeltaExchangeClient:
         }
         if limit_price:
             order_body["limit_price"] = limit_price
-        return await self._make_request("POST", "/v2/orders", json_body=order_body, authenticated=True)
+        
+        # Make request with better error handling
+        method = "POST"
+        path = "/v2/orders"
+        url = f"{self.base_url}{path}"
+        payload = json.dumps(order_body)
+        
+        timestamp, signature = self._generate_signature(method, path, "", payload)
+        headers = {
+            "User-Agent": "wolffs-insta-autotrade",
+            "Content-Type": "application/json",
+            "api-key": self.api_key,
+            "signature": signature,
+            "timestamp": timestamp
+        }
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.request(
+                method=method,
+                url=url,
+                headers=headers,
+                content=payload.encode()
+            )
+            
+            # Log detailed error if failed
+            if response.status_code != 200:
+                error_text = response.text
+                logger.error(f"Delta Exchange order failed: Status={response.status_code}, Response={error_text}, Order={order_body}")
+                response.raise_for_status()
+            
+            return response.json()
     
     async def test_connection(self) -> dict:
         try:
