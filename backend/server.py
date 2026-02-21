@@ -1621,14 +1621,8 @@ async def execute_trades_for_alert(alert: dict):
                                     }
                                     logger.info(f"Current position for {product_symbol}: {current_position}")
                                     break
-                                current_position = {
-                                    "size": abs(pos_size),
-                                    "side": "buy" if pos_size > 0 else "sell"
-                                }
-                                logger.info(f"Current position for {product_symbol}: {current_position}")
-                                break
                     
-                    # If there's an opposite position on same product, close it first
+                    # If there's an opposite position on same product (futures), close it first
                     if current_position and current_position["side"] == opposite_side:
                         close_size = current_position["size"]
                         logger.info(f"Closing opposite position: {close_size} {current_position['side']} -> placing {close_size} {side}")
