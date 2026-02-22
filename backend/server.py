@@ -337,8 +337,8 @@ class DeltaExchangeClient:
         logger.info(f"Delta Exchange Client initialized - Region: {region}, Testnet: {is_testnet}, URL: {self.base_url}")
         
     def _generate_signature(self, method: str, path: str, query_string: str = "", payload: str = "") -> tuple:
-        # Timestamp in MILLISECONDS as per Delta Exchange docs
-        timestamp = str(int(time.time() * 1000))
+        # Timestamp in SECONDS as per Delta Exchange API
+        timestamp = str(int(time.time()))
         # Correct signature format: timestamp + method + path + query_string + payload
         signature_data = timestamp + method + path + query_string + payload
         signature = hmac.new(
