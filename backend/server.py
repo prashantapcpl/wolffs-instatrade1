@@ -1398,27 +1398,30 @@ async def execute_trades_for_alert(alert: dict):
                     
                     logger.info(f"Options action: Signal={action} -> Action={option_action} (Type={option_type}, Side={option_side})")
                     
-                    # Get spot price - use alert price or fetch from products
+                    # Get REAL-TIME spot price from Delta Exchange
                     spot_price = alert_price
                     if not spot_price:
-                        # Try to get spot price from perpetual product
-                        for p in products:
-                            p_symbol = p.get("symbol", "").upper()
-                            p_type = str(p.get("product_type", "")).lower()
-                            # Match ETHUSD or BTCUSD perpetual
-                            if p_symbol == f"{instrument}USD" or (instrument in p_symbol and 'perpetual' in p_type):
-                                spot_price = float(p.get("spot_price") or p.get("mark_price") or p.get("last_price") or 0)
-                                if spot_price > 0:
-                                    logger.info(f"Got spot price from {p_symbol}: {spot_price}")
-                                    break
+                        # Fetch actual price from Delta Exchange
+                        spot_price = await delta_client.get_spot_price(instrument)
                     
-                    if not spot_price:
-                        # Updated default prices (Feb 2026)
-                        spot_price = 97000 if instrument == "BTC" else 2000
-                        logger.warning(f"Using default spot price for {instrument}: {spot_price}")
-                    else:
-                        spot_price = float(spot_price)
+                    if not spot_price or spot_price == 0:
+                        logger.error(f"Could not fetch spot price for {instrument} - cannot execute options trade")
+                        await db.trades.insert_one({
+                            "id": str(uuid.uuid4()),
+                            "user_id": user["id"],
+                            "alert_id": alert["id"],
+                            "symbol": symbol,
+                            "strategy_type": strategy_type,
+                            "instrument": instrument,
+                            "action": action,
+                            "quantity": quantity,
+                            "status": "failed",
+                            "error": f"Could not fetch spot price for {instrument}",
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        })
+                        continue
                     
+                    spot_price = float(spot_price)
                     logger.info(f"Options trading - Instrument: {instrument}, Spot: {spot_price}, Strike Selection: {strike_selection}, Expiry: {expiry_preference}")
                     
                     # Calculate strike interval based on instrument
