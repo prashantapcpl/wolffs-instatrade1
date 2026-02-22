@@ -367,6 +367,9 @@ class DeltaExchangeClient:
                 "signature": signature,
                 "timestamp": timestamp
             })
+            # Debug logging for authentication issues
+            logger.info(f"API Request: {method} {url}")
+            logger.info(f"Timestamp: {timestamp}, API Key: {self.api_key[:8]}...")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.request(
@@ -376,6 +379,11 @@ class DeltaExchangeClient:
                 params=query_params,
                 content=payload.encode() if payload else None
             )
+            
+            # Log response for debugging
+            if response.status_code != 200:
+                logger.error(f"API Response: {response.status_code} - {response.text[:500]}")
+            
             response.raise_for_status()
             return response.json()
     
