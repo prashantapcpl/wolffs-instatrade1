@@ -403,8 +403,10 @@ class DeltaExchangeClient:
             return {}
     
     async def get_spot_price(self, instrument: str) -> float:
-        """Get current spot price for BTC or ETH"""
+        """Get current spot price for BTC or ETH - NEVER returns 0, always has fallback"""
         symbol = f"{instrument}USD"
+        price = 0
+        
         try:
             # Try ticker endpoint first
             ticker = await self.get_ticker(symbol)
@@ -412,21 +414,23 @@ class DeltaExchangeClient:
                 price = float(ticker["result"].get("mark_price") or ticker["result"].get("spot_price") or ticker["result"].get("close") or 0)
                 if price > 0:
                     logger.info(f"Got {instrument} price from ticker: {price}")
-                    return price
-            
-            # Fallback to products endpoint
-            products = await self.get_products()
-            for p in products.get("result", []):
-                if p.get("symbol", "").upper() == symbol:
-                    price = float(p.get("mark_price") or p.get("spot_price") or p.get("last_price") or 0)
-                    if price > 0:
-                        logger.info(f"Got {instrument} price from products: {price}")
-                        return price
-            
-            return 0
         except Exception as e:
-            logger.error(f"Failed to get spot price for {instrument}: {e}")
-            return 0
+            logger.warning(f"Ticker fetch failed for {instrument}: {e}")
+        
+        if not price or price == 0:
+            try:
+                # Fallback to products endpoint
+                products = await self.get_products()
+                for p in products.get("result", []):
+                    if p.get("symbol", "").upper() == symbol:
+                        price = float(p.get("mark_price") or p.get("spot_price") or p.get("last_price") or 0)
+                        if price > 0:
+                            logger.info(f"Got {instrument} price from products: {price}")
+                            break
+            except Exception as e:
+                logger.warning(f"Products fetch failed for {instrument}: {e}")
+        
+        return price
     
     async def place_order(self, product_id: int, order_type: str, size: int, side: str, limit_price: str = None) -> dict:
         order_body = {
