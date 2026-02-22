@@ -475,14 +475,21 @@ class DeltaExchangeClient:
     
     async def test_connection(self) -> dict:
         try:
+            logger.info(f"Testing connection to {self.base_url}")
             balance = await self.get_wallet_balance()
+            logger.info(f"Connection test successful - balance received")
             return {"success": True, "balance": balance}
         except httpx.HTTPStatusError as e:
-            error_detail = f"HTTP {e.response.status_code}: {e.response.text}"
+            error_text = e.response.text[:500] if e.response.text else "No response body"
+            error_detail = f"HTTP {e.response.status_code}: {error_text}"
+            logger.error(f"Connection test failed: {error_detail}")
             if e.response.status_code == 401:
-                error_detail = "Authentication failed. Please check: 1) API Key & Secret are correct, 2) IP is whitelisted in Delta Exchange, 3) Testnet toggle matches where you created keys"
+                error_detail = "Authentication failed. Check: 1) API Key & Secret are correct, 2) IP 72.62.230.214 is whitelisted, 3) Testnet toggle matches where you created keys"
+            elif e.response.status_code == 403:
+                error_detail = "Access forbidden. Check: 1) IP 72.62.230.214 is whitelisted in Delta Exchange, 2) API key permissions are set correctly"
             return {"success": False, "error": error_detail}
         except Exception as e:
+            logger.error(f"Connection test exception: {str(e)}")
             return {"success": False, "error": str(e)}
 
 # ======================= AUTH ROUTES =======================
