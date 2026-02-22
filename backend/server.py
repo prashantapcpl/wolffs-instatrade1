@@ -1131,8 +1131,8 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         return {"status": "rejected", "reason": f"Invalid action: {action}. Use BUY or SELL."}
     
     # ROBUST DEDUPLICATION using database lock
-    # Create a unique key for this alert type
-    dedup_key = f"{instrument}_{action}_{source}"
+    # Create a unique key for this alert type (include strategy_type to allow futures + options)
+    dedup_key = f"{instrument}_{action}_{source}_{strategy_type}"
     current_minute = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")  # Minute-level granularity
     
     # Try to insert a dedup lock - if it exists, this is a duplicate
@@ -1152,6 +1152,7 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
                 "instrument": instrument,
                 "action": action,
                 "source": source,
+                "strategy_type": strategy_type,
                 "timestamp": {"$regex": f"^{current_minute}"}
             }, {"_id": 0})
             return {"status": "duplicate_ignored", "alert_id": existing.get("id") if existing else "locked"}
