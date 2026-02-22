@@ -393,6 +393,41 @@ class DeltaExchangeClient:
     async def get_products(self) -> dict:
         return await self._make_request("GET", "/v2/products")
     
+    async def get_ticker(self, symbol: str) -> dict:
+        """Get real-time ticker/price for a symbol"""
+        try:
+            response = await self._make_request("GET", f"/v2/tickers/{symbol}")
+            return response
+        except Exception as e:
+            logger.warning(f"Failed to get ticker for {symbol}: {e}")
+            return {}
+    
+    async def get_spot_price(self, instrument: str) -> float:
+        """Get current spot price for BTC or ETH"""
+        symbol = f"{instrument}USD"
+        try:
+            # Try ticker endpoint first
+            ticker = await self.get_ticker(symbol)
+            if ticker.get("result"):
+                price = float(ticker["result"].get("mark_price") or ticker["result"].get("spot_price") or ticker["result"].get("close") or 0)
+                if price > 0:
+                    logger.info(f"Got {instrument} price from ticker: {price}")
+                    return price
+            
+            # Fallback to products endpoint
+            products = await self.get_products()
+            for p in products.get("result", []):
+                if p.get("symbol", "").upper() == symbol:
+                    price = float(p.get("mark_price") or p.get("spot_price") or p.get("last_price") or 0)
+                    if price > 0:
+                        logger.info(f"Got {instrument} price from products: {price}")
+                        return price
+            
+            return 0
+        except Exception as e:
+            logger.error(f"Failed to get spot price for {instrument}: {e}")
+            return 0
+    
     async def place_order(self, product_id: int, order_type: str, size: int, side: str, limit_price: str = None) -> dict:
         order_body = {
             "product_id": product_id,
