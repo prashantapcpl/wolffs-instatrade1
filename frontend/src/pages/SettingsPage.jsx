@@ -160,7 +160,9 @@ export default function SettingsPage() {
     const handleDisconnect = async () => {
         try {
             await axios.delete(`${API_URL}/api/delta/disconnect`);
-            toast.success('Delta Exchange disconnected (credentials saved)');
+            toast.success('Delta Exchange disconnected');
+            setHasSavedCredentials(false);
+            setDeltaStatus(null);
             await fetchDeltaStatus();
             await refreshUser();
         } catch (error) {
