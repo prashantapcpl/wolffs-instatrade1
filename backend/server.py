@@ -350,11 +350,17 @@ class DeltaExchangeClient:
     
     async def _make_request(self, method: str, path: str, query_params: dict = None, json_body: dict = None, authenticated: bool = False) -> dict:
         url = f"{self.base_url}{path}"
-        payload = json.dumps(json_body) if json_body else ""
+        # Body string - use compact JSON like official SDK
+        payload = json.dumps(json_body, separators=(',', ':')) if json_body else ""
+        
+        # Query string with ? prefix like official SDK
         query_string = ""
         if query_params:
-            sorted_params = sorted(query_params.items())
-            query_string = "?" + "&".join(f"{k}={v}" for k, v in sorted_params)
+            import urllib.parse
+            query_strings = []
+            for key, value in query_params.items():
+                query_strings.append(f"{key}={urllib.parse.quote_plus(str(value))}")
+            query_string = "?" + "&".join(query_strings)
         
         headers = {
             "User-Agent": "wolffs-insta-autotrade",
@@ -368,9 +374,9 @@ class DeltaExchangeClient:
                 "signature": signature,
                 "timestamp": timestamp
             })
-            # Debug logging for authentication issues
-            logger.info(f"API Request: {method} {url}")
-            logger.info(f"Timestamp: {timestamp}, API Key: {self.api_key[:8]}...")
+            # Debug logging
+            logger.info(f"API Request: {method} {url}{query_string}")
+            logger.info(f"Timestamp: {timestamp}, Signature data: {method}+{timestamp}+{path}+{query_string}+{payload[:50] if payload else ''}")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.request(
