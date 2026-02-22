@@ -378,7 +378,7 @@ class DeltaExchangeClient:
             logger.info(f"API Request: {method} {url}{query_string}")
             logger.info(f"Timestamp: {timestamp}, Signature data: {method}+{timestamp}+{path}+{query_string}+{payload[:50] if payload else ''}")
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, transport=httpx.AsyncHTTPTransport(local_address="0.0.0.0")) as client:
             response = await client.request(
                 method=method,
                 url=url,
@@ -472,7 +472,7 @@ class DeltaExchangeClient:
             "timestamp": timestamp
         }
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, transport=httpx.AsyncHTTPTransport(local_address="0.0.0.0")) as client:
             response = await client.request(
                 method=method,
                 url=url,
