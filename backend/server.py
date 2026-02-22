@@ -1158,17 +1158,18 @@ async def process_webhook(request: Request, background_tasks: BackgroundTasks, s
         else:
             logger.warning(f"Lock insert error (proceeding): {lock_error}")
     
-    # Also check for recent alerts as backup
+    # Also check for recent alerts as backup (include strategy_type to allow futures + options simultaneously)
     thirty_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=30)).isoformat()
     existing_alert = await db.alerts.find_one({
         "instrument": instrument,
         "action": action,
         "source": source,
+        "strategy_type": strategy_type,  # Allow different strategy types for same instrument
         "timestamp": {"$gte": thirty_seconds_ago}
     }, {"_id": 0})
     
     if existing_alert:
-        logger.info(f"Duplicate alert ignored (time check): {instrument} {action}")
+        logger.info(f"Duplicate alert ignored (time check): {instrument} {action} {strategy_type}")
         return {"status": "duplicate_ignored", "alert_id": existing_alert.get("id")}
     
     # Create alert record
