@@ -935,12 +935,13 @@ async def get_delta_status(current_user: dict = Depends(get_current_user)):
 
 @api_router.delete("/delta/disconnect")
 async def disconnect_delta(current_user: dict = Depends(get_current_user)):
-    # Keep credentials saved but mark as disconnected
+    # Clear credentials completely
     await db.users.update_one(
         {"id": current_user["id"]},
-        {"$set": {"delta_connected": False}}
+        {"$unset": {"delta_credentials": ""}, "$set": {"delta_connected": False}}
     )
-    return {"message": "Delta Exchange disconnected (credentials saved)"}
+    logger.info(f"Delta Exchange disconnected for user {current_user['id']} - credentials cleared")
+    return {"message": "Delta Exchange disconnected"}
 
 @api_router.post("/delta/reconnect")
 async def reconnect_delta(current_user: dict = Depends(get_current_user)):
